@@ -1,4 +1,4 @@
-<?
+<?php
 
 /******************************************************************************
 *
@@ -1237,7 +1237,7 @@ function Interpret_Transfer_Function( $Transfer_Function_Binary )
         }
         else
         {
-                $output_str .= "\nOverride: Override printer’s default transfer curve";
+                $output_str .= "\nOverride: Override printer's default transfer curve";
         }
 
         // Return the result
@@ -1337,7 +1337,7 @@ function Interpret_Halftone( $Halftone_Binary )
         // Interpret Printer Default Screens
         if ( $HalftoneInfo['Default'] == 1 )
         {
-                $output_str .= "Use printer’s default screens\n";
+                $output_str .= "Use printer's default screens\n";
         }
         else
         {
@@ -1446,9 +1446,9 @@ $GLOBALS[ "Photoshop_ID_Names" ] = array(
 ******************************************************************************/
 
 $GLOBALS[ "Photoshop_ID_Descriptions" ] = array(
-0x03E8 => "Obsolete—Photoshop 2.0 only. number of channels, rows, columns, depth, and mode.",
+0x03E8 => "Obsolete-Photoshop 2.0 only. number of channels, rows, columns, depth, and mode.",
 0x03E9 => "Optional. Macintosh print manager print info record.",
-0x03EB => "Obsolete—Photoshop 2.0 only. Contains the indexed color table.",
+0x03EB => "Obsolete-Photoshop 2.0 only. Contains the indexed color table.",
 0x03ED => "ResolutionInfo structure. See Appendix A in Photoshop SDK Guide.pdf",
 0x03EE => "Names of the alpha channels as a series of Pascal strings.",
 0x03EF => "DisplayInfo structure. See Appendix A in Photoshop SDK Guide.pdf",

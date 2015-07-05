@@ -1,4 +1,6 @@
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
 <!--***************************************************************************
 *
@@ -48,8 +50,8 @@
 
         <head>
 
-                <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
-                <STYLE TYPE="text/css" MEDIA="screen, print, projection">
+                <meta http-equiv="Content-Style-Type" content="text/css"/>
+                <style type="text/css" media="screen, print, projection">
                 <!--
 
                         BODY { background-color:#505050; color:#F0F0F0 }
@@ -60,7 +62,7 @@
                         .EXIF_Table tbody td{border-width: 1px; border-style:solid; border-color: #909000;}
 
                 -->
-                </STYLE>
+                </style>
 
 
                 <?php
@@ -102,33 +104,29 @@
                                 }
                         }
 
-
-                        // Output the title
-                        echo "<title>Metadata details for $filename</title>";
-
-
-
                  ?>
+
+                <title>Metadata details for <?php echo $filename; ?></title>
 
         </head>
 
         <body>
+                <div>
+                    <p >Interpreted using: <a href="http://www.ozhiker.com/electronics/pjmt/">PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>                <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
+                    <br/>
 
-                <p >Interpreted using: <a href="http://www.ozhiker.com/electronics/pjmt/">PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>                <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
-                <br>
-
-                <h2><B><U>Metadata for &quot;<?php echo $filename; ?>&quot;</U></B></h2>
+                    <h2><b><u>Metadata for &quot;<?php echo $filename; ?>&quot;</u></b></h2>
 
 
-                <!-- Output the EXIF Information -->
-                <?php echo Interpret_EXIF_to_HTML( get_EXIF_TIFF( $filename ), $filename );  ?>
+                    <!-- Output the EXIF Information -->
+                    <?php echo Interpret_EXIF_to_HTML( get_EXIF_TIFF( $filename ), $filename );  ?>
 
-                <BR>
-                <BR>
-                <BR>
-                <p>Interpreted using:</p>
-                <p><a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>              <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
-
+                    <br/>
+                    <br/>
+                    <br/>
+                    <p>Interpreted using:</p>
+                    <p><a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>              <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
+                </div>
         </body>
 
 </html>

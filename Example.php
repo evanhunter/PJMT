@@ -1,4 +1,6 @@
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
 <!--***************************************************************************
 *
@@ -53,8 +55,8 @@
 
         <head>
 
-                <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
-                <STYLE TYPE="text/css" MEDIA="screen, print, projection">
+                <meta http-equiv="Content-Style-Type" content="text/css"/>
+                <style type="text/css" media="screen, print, projection">
                 <!--
 
                         BODY { background-color:#505050; color:#F0F0F0 }
@@ -65,7 +67,7 @@
                         .EXIF_Table tbody td{border-width: 1px; border-style:solid; border-color: #909000;}
 
                 -->
-                </STYLE>
+                </style>
 
 
                 <?php
@@ -115,117 +117,115 @@
                                 }
                         }
 
-
-                        // Output the title
-                        echo "<title>Metadata details for $filename</title>";
-
                         // Retrieve the header information
                         $jpeg_header_data = get_jpeg_header_data( $filename );
 
                  ?>
 
+                <title>Metadata details for <?php echo $filename; ?></title>
+                
         </head>
 
         <body>
+                <div>
+                        <p>Interpreted using: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>    <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
+                        <br/>
+                        <br/>
 
-                <p>Interpreted using: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>    <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
-                <br>
-                <br>
+                        <h1><b><u>Metadata for &quot;<?php echo $filename; ?>&quot;</u></b></h1>
+                        <br/>
 
-                <h1><B><U>Metadata for &quot;<?php echo $filename; ?>&quot;</U></B></h1>
-                <br>
-
-                <!-- Output a link allowing user to edit the Photoshop File Info
-                     Change: Allow this example file to be easily relocatable - as of version 1.11
-                -->
-                <?php  $relative_filename = get_relative_path( $filename, $Toolkit_Dir );  ?>
-                <h4><a href="<?php echo $Toolkit_Dir."Edit_File_Info_Example.php?jpeg_fname=$relative_filename"; ?>" >Click here to edit the Photoshop File Info for this file</a></h4>
-                <br>
-
-
-
-                <!-- Output the information about the APP segments -->
-                <?php   echo Generate_JPEG_APP_Segment_HTML( $jpeg_header_data ); ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Output the Intrinsic JPEG Information -->
-                <?php   echo Interpret_intrinsic_values_to_HTML( get_jpeg_intrinsic_values( $jpeg_header_data ) );  ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Output the JPEG Comment -->
-                <?php   echo Interpret_Comment_to_HTML( $jpeg_header_data ); ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Output the JPEG File Interchange Format Information -->
-                <?php   echo Interpret_JFIF_to_HTML( get_JFIF( $jpeg_header_data ), $filename ); ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Output the JFIF Extension Information -->
-                <?php   echo Interpret_JFXX_to_HTML( get_JFXX( $jpeg_header_data ), $filename ); ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Output the Picture Info Text -->
-                <?php   echo Interpret_App12_Pic_Info_to_HTML( $jpeg_header_data ); ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Output the EXIF Information -->
-                <?php   echo Interpret_EXIF_to_HTML( get_EXIF_JPEG( $filename ), $filename );  ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Output the XMP Information -->
-                <?php   echo Interpret_XMP_to_HTML( read_XMP_array_from_text( get_XMP_text( $jpeg_header_data ) ) ); ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Output the Photoshop IRB (including the IPTC-NAA info -->
-                <?php   echo Interpret_IRB_to_HTML( get_Photoshop_IRB( $jpeg_header_data ), $filename ); ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Output the Meta Information -->
-                <?php   echo Interpret_EXIF_to_HTML( get_Meta_JPEG( $filename ), $filename );  ?>
-
-                <BR>
-                <HR>
-                <BR>
-
-                <!-- Display the original image -->
-
-                <h2>Original Image</h2>
-                <?php   echo "<img src=\"$filename\">";  ?>
+                        <!-- Output a link allowing user to edit the Photoshop File Info
+                             Change: Allow this example file to be easily relocatable - as of version 1.11
+                        -->
+                        <?php  $relative_filename = get_relative_path( $filename, $Toolkit_Dir );  ?>
+                        <h4><a href="<?php echo $Toolkit_Dir."Edit_File_Info_Example.php?jpeg_fname=$relative_filename"; ?>" >Click here to edit the Photoshop File Info for this file</a></h4>
+                        <br/>
 
 
-                <BR>
-                <BR>
-                <BR>
-                <p>Interpreted using:</p>
-                <p><a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>     <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
 
+                        <!-- Output the information about the APP segments -->
+                        <?php   echo Generate_JPEG_APP_Segment_HTML( $jpeg_header_data ); ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Output the Intrinsic JPEG Information -->
+                        <?php   echo Interpret_intrinsic_values_to_HTML( get_jpeg_intrinsic_values( $jpeg_header_data ) );  ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Output the JPEG Comment -->
+                        <?php   echo Interpret_Comment_to_HTML( $jpeg_header_data ); ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Output the JPEG File Interchange Format Information -->
+                        <?php   echo Interpret_JFIF_to_HTML( get_JFIF( $jpeg_header_data ), $filename ); ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Output the JFIF Extension Information -->
+                        <?php   echo Interpret_JFXX_to_HTML( get_JFXX( $jpeg_header_data ), $filename ); ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Output the Picture Info Text -->
+                        <?php   echo Interpret_App12_Pic_Info_to_HTML( $jpeg_header_data ); ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Output the EXIF Information -->
+                        <?php   echo Interpret_EXIF_to_HTML( get_EXIF_JPEG( $filename ), $filename );  ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Output the XMP Information -->
+                        <?php   echo Interpret_XMP_to_HTML( read_XMP_array_from_text( get_XMP_text( $jpeg_header_data ) ) ); ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Output the Photoshop IRB (including the IPTC-NAA info -->
+                        <?php   echo Interpret_IRB_to_HTML( get_Photoshop_IRB( $jpeg_header_data ), $filename ); ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Output the Meta Information -->
+                        <?php   echo Interpret_EXIF_to_HTML( get_Meta_JPEG( $filename ), $filename );  ?>
+
+                        <br/>
+                        <hr/>
+                        <br/>
+
+                        <!-- Display the original image -->
+
+                        <h2>Original Image</h2>
+                        <?php   echo "<img src=\"$filename\">";  ?>
+
+
+                        <br/>
+                        <br/>
+                        <br/>
+                        <p>Interpreted using:</p>
+                        <p><a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>     <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
+                </div>
         </body>
 
 </html>

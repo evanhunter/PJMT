@@ -1,4 +1,6 @@
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
 <!--***************************************************************************
 *
@@ -49,8 +51,8 @@
 
         <head>
 
-                <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
-                <STYLE TYPE="text/css" MEDIA="screen, print, projection">
+                <meta http-equiv="Content-Style-Type" content="text/css"/>
+                <style type="text/css" media="screen, print, projection">
                 <!--
 
                         BODY { background-color:#505050; color:#F0F0F0 }
@@ -61,7 +63,7 @@
                         .EXIF_Table tbody td{border-width: 1px; border-style:solid; border-color: #909000;}
 
                 -->
-                </STYLE>
+                </style>
 
 
                 <?php
@@ -107,67 +109,68 @@
         </head>
 
         <body >
-                <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>    <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
-                <br>
-                <br>
+                <div>
+                        <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>    <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
+                        <br/>
+                        <br/>
 
 
-                <?php
-                        // Output a heading
-                        echo "<H1>Edit Photoshop File Info details for $filename</H1>";
+                        <?php
+                                // Output a heading
+                                echo "<H1>Edit Photoshop File Info details for $filename</H1>";
 
-                        // Output a link to display the full metadata
-                        echo "<p><a href=\"Example.php?jpeg_fname=" . $filename . "\" >View Full Metatdata Information</a></p>\n";
-
-
-                        // Display a small copy of the image
-                        echo "<p><img src=\"$filename\" height=\"50%\"></p>";
-
-                        // Define defaults for the fields - These are only used where the image has blank fields
-                        $default_ps_file_info_array = array (
-                                                                'title'                 => "",
-                                                                'author'                => "Evan Hunter",
-                                                                'authorsposition'       => "",
-                                                                'caption'               => "",
-                                                                'captionwriter'         => "Evan Hunter",
-                                                                'jobname'               => "",
-                                                                'copyrightstatus'       => "Copyrighted Work",
-                                                                'copyrightnotice'       => "Copyright (c) Evan Hunter 2004",
-                                                                'ownerurl'              => "http://www.ozhiker.com",
-                                                                'keywords'              => array(),
-                                                                'category'              => "",
-                                                                'supplementalcategories'=> array(),
-                                                                'date'                  => "",
-                                                                'city'                  => "",
-                                                                'state'                 => "Tasmania",
-                                                                'country'               => "Australia",
-                                                                'credit'                => "Evan Hunter",
-                                                                'source'                => "Evan Hunter",
-                                                                'headline'              => "",
-                                                                'instructions'          => "",
-                                                                'transmissionreference' => "",
-                                                                'urgency'               => ""
-                                                                );
-
-                        // outputfilename must always be defined, as it specifies the
-                        // file which will be changed
-
-                        // These two lines create a temporary copy of the file
-                        // which will be the one that is edited, keeping
-                        // the original intact. - This would not be required if you wanted
-                        // to change the original - in that case just set $outputfilename = $filename
-                        $outputfilename = get_next_filename( );
-                        copy( $filename, $outputfilename );
+                                // Output a link to display the full metadata
+                                echo "<p><a href=\"Example.php?jpeg_fname=" . $filename . "\" >View Full Metatdata Information</a></p>\n";
 
 
+                                // Display a small copy of the image
+                                echo "<p><img src=\"$filename\" height=\"50%\"></p>";
+
+                                // Define defaults for the fields - These are only used where the image has blank fields
+                                $default_ps_file_info_array = array (
+                                                                        'title'                 => "",
+                                                                        'author'                => "Evan Hunter",
+                                                                        'authorsposition'       => "",
+                                                                        'caption'               => "",
+                                                                        'captionwriter'         => "Evan Hunter",
+                                                                        'jobname'               => "",
+                                                                        'copyrightstatus'       => "Copyrighted Work",
+                                                                        'copyrightnotice'       => "Copyright (c) Evan Hunter 2004",
+                                                                        'ownerurl'              => "http://www.ozhiker.com",
+                                                                        'keywords'              => array(),
+                                                                        'category'              => "",
+                                                                        'supplementalcategories'=> array(),
+                                                                        'date'                  => "",
+                                                                        'city'                  => "",
+                                                                        'state'                 => "Tasmania",
+                                                                        'country'               => "Australia",
+                                                                        'credit'                => "Evan Hunter",
+                                                                        'source'                => "Evan Hunter",
+                                                                        'headline'              => "",
+                                                                        'instructions'          => "",
+                                                                        'transmissionreference' => "",
+                                                                        'urgency'               => ""
+                                                                        );
+
+                                // outputfilename must always be defined, as it specifies the
+                                // file which will be changed
+
+                                // These two lines create a temporary copy of the file
+                                // which will be the one that is edited, keeping
+                                // the original intact. - This would not be required if you wanted
+                                // to change the original - in that case just set $outputfilename = $filename
+                                $outputfilename = get_next_filename( );
+                                copy( $filename, $outputfilename );
 
 
-                        // Include the File Info Editor.
 
-                        include "Edit_File_Info.php";
 
-                ?>
+                                // Include the File Info Editor.
 
+                                include "Edit_File_Info.php";
+
+                        ?>
+                </div>
 
         </body>
 

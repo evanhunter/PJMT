@@ -1,4 +1,4 @@
-<?
+<?php
 
 /******************************************************************************
 *
@@ -1686,7 +1686,6 @@ function get_Tag_Text_Value( $Tag, $Tag_Definitions_Name )
                         // Unknown coding - return string indicating this
                         return "Unsupported character coding : \"$char_code\"\n\"" . trim($characters) . "\"";
                 }
-                break;
         }
         else if ( $Tag['Type'] == "Numeric" )
         {

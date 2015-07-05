@@ -1,4 +1,6 @@
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
 <!--***************************************************************************
 *
@@ -52,8 +54,8 @@
 
 
         <head>
-                <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
-                <STYLE TYPE="text/css" MEDIA="screen, print, projection">
+            <meta http-equiv="Content-Style-Type" content="text/css"/>
+                <style type="text/css" media="screen, print, projection">
                 <!--
 
                         BODY { background-color:#505050; color:#F0F0F0 }
@@ -64,133 +66,134 @@
                         .EXIF_Table tbody td{border-width: 1px; border-style:solid; border-color: #909000;}
 
                 -->
-                </STYLE>
+                </style>
 
                 <title>Writing Photoshop File Info Metadata</title>
         </head>
 
         <body>
-                <?php include 'Toolkit_Version.php'; ?>
-                <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>                   <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
-                <br>
-                <br>
+            <div>
+                    <?php include 'Toolkit_Version.php'; ?>
+                    <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>                   <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
+                    <br/>
+                    <br/>
 
-                <?php
-                        // Turn off Error Reporting
-                        error_reporting ( 0 );          // Change: changed to no reporting -  as of version 1.11
+                    <?php
+                            // Turn off Error Reporting
+                            error_reporting ( 0 );          // Change: changed to no reporting -  as of version 1.11
 
-                        include 'Toolkit_Version.php';  // Change: added as of version 1.11
+                            include 'Toolkit_Version.php';  // Change: added as of version 1.11
 
-                        // Include the required files for reading and writing Photoshop File Info
-                        include 'JPEG.php';
-                        include 'XMP.php';
-                        include 'Photoshop_IRB.php';
-                        include 'EXIF.php';
-                        include 'Photoshop_File_Info.php';
-
-
-                        // Copy all of the HTML Posted variables into an array
-                        $new_ps_file_info_array = $GLOBALS['HTTP_POST_VARS'];
-
-                        // Some characters are escaped with backslashes in HTML Posted variable
-                        // Cycle through each of the HTML Posted variables, and strip out the slashes
-                        foreach( $new_ps_file_info_array as $var_key => $var_val )
-                        {
-                                $new_ps_file_info_array[ $var_key ] = stripslashes( $var_val );
-                        }
-
-                        // Keywords should be an array - explode it on newline boundarys
-                        $new_ps_file_info_array[ 'keywords' ] = explode( "\n", trim( $new_ps_file_info_array[ 'keywords' ] ) );
-
-                        // Supplemental Categories should be an array - explode it on newline boundarys
-                        $new_ps_file_info_array[ 'supplementalcategories' ] = explode( "\n", trim( $new_ps_file_info_array[ 'supplementalcategories' ] ) );
-
-                        // Make the filename easier to access
-                        $filename = $new_ps_file_info_array[ 'filename' ];
-
-                        // Protect against hackers editing other files
-                        $path_parts = pathinfo( $filename );
-                        if ( strcasecmp( $path_parts["extension"], "jpg" ) != 0 )
-                        {
-                                echo "Incorrect File Type - JPEG Only\n";
-                                exit( );
-                        }
-                        // Change: removed limitation on file being in current directory - as of version 1.11
-
-                        // Retrieve the header information
-                        $jpeg_header_data = get_jpeg_header_data( $filename );
-
-                        // Retreive the EXIF, XMP and Photoshop IRB information from
-                        // the existing file, so that it can be updated
-                        $Exif_array = get_EXIF_JPEG( $filename );
-                        $XMP_array = read_XMP_array_from_text( get_XMP_text( $jpeg_header_data ) );
-                        $IRB_array = get_Photoshop_IRB( $jpeg_header_data );
-
-                        // Update the JPEG header information with the new Photoshop File Info
-                        $jpeg_header_data = put_photoshop_file_info( $jpeg_header_data, $new_ps_file_info_array, $Exif_array, $XMP_array, $IRB_array );
-
-                        // Check if the Update worked
-                        if ( $jpeg_header_data == FALSE )
-                        {
-                                // Update of file info didn't work - output error message
-                                echo "Error - Failure update Photoshop File Info : $filename <br>\n";
-
-                                // Output HTML with the form and data which was
-                                // sent, to allow the user to fix it
-
-                                $outputfilename = $filename;
-                                include "Edit_File_info.php";
-                                echo "</body>\n";
-                                echo "</html>\n";
-
-                                // Abort processing
-                                exit( );
-                        }
-
-                        // Attempt to write the new JPEG file
-                        if ( FALSE == put_jpeg_header_data( $filename, $filename, $jpeg_header_data ) )
-                        {
-                                // Writing of the new file didn't work - output error message
-                                echo "Error - Failure to write new JPEG : $filename <br>\n";
-
-                                // Output HTML with the form and data which was
-                                // sent, to allow the user to fix it
-
-                                $outputfilename = $filename;
-                                include "Edit_File_info.php";
-                                echo "</body>\n";
-                                echo "</html>\n";
-
-                                // Abort processing
-                                exit( );
-                        }
+                            // Include the required files for reading and writing Photoshop File Info
+                            include 'JPEG.php';
+                            include 'XMP.php';
+                            include 'Photoshop_IRB.php';
+                            include 'EXIF.php';
+                            include 'Photoshop_File_Info.php';
 
 
-                        // Writing of new JPEG succeeded
+                            // Copy all of the HTML Posted variables into an array
+                            $new_ps_file_info_array = $GLOBALS['HTTP_POST_VARS'];
 
-                        // Output information about new file
+                            // Some characters are escaped with backslashes in HTML Posted variable
+                            // Cycle through each of the HTML Posted variables, and strip out the slashes
+                            foreach( $new_ps_file_info_array as $var_key => $var_val )
+                            {
+                                    $new_ps_file_info_array[ $var_key ] = stripslashes( $var_val );
+                            }
 
-                        echo "<h1>DONE! - $filename updated</h1>\n";
-                        echo "<p><a href=\"Example.php?jpeg_fname=$filename\" >View Full Metatdata Information</a></p>\n";
-                        echo "<p><a href=\"Edit_File_Info_Example.php?jpeg_fname=$filename\" >Re-Edit Photoshop File Info</a></p>\n";
-                        echo "<br><br>\n";
-                        echo "<p>Below is the updated image, you can save it and look at the changed metadata in your favorite image editor</p>\n";
-                        echo "<p><img src=\"$filename\" ></p>\n";
+                            // Keywords should be an array - explode it on newline boundarys
+                            $new_ps_file_info_array[ 'keywords' ] = explode( "\n", trim( $new_ps_file_info_array[ 'keywords' ] ) );
+
+                            // Supplemental Categories should be an array - explode it on newline boundarys
+                            $new_ps_file_info_array[ 'supplementalcategories' ] = explode( "\n", trim( $new_ps_file_info_array[ 'supplementalcategories' ] ) );
+
+                            // Make the filename easier to access
+                            $filename = $new_ps_file_info_array[ 'filename' ];
+
+                            // Protect against hackers editing other files
+                            $path_parts = pathinfo( $filename );
+                            if ( strcasecmp( $path_parts["extension"], "jpg" ) != 0 )
+                            {
+                                    echo "Incorrect File Type - JPEG Only\n";
+                                    exit( );
+                            }
+                            // Change: removed limitation on file being in current directory - as of version 1.11
+
+                            // Retrieve the header information
+                            $jpeg_header_data = get_jpeg_header_data( $filename );
+
+                            // Retreive the EXIF, XMP and Photoshop IRB information from
+                            // the existing file, so that it can be updated
+                            $Exif_array = get_EXIF_JPEG( $filename );
+                            $XMP_array = read_XMP_array_from_text( get_XMP_text( $jpeg_header_data ) );
+                            $IRB_array = get_Photoshop_IRB( $jpeg_header_data );
+
+                            // Update the JPEG header information with the new Photoshop File Info
+                            $jpeg_header_data = put_photoshop_file_info( $jpeg_header_data, $new_ps_file_info_array, $Exif_array, $XMP_array, $IRB_array );
+
+                            // Check if the Update worked
+                            if ( $jpeg_header_data == FALSE )
+                            {
+                                    // Update of file info didn't work - output error message
+                                    echo "Error - Failure update Photoshop File Info : $filename <br/>\n";
+
+                                    // Output HTML with the form and data which was
+                                    // sent, to allow the user to fix it
+
+                                    $outputfilename = $filename;
+                                    include "Edit_File_info.php";
+                                    echo "</body>\n";
+                                    echo "</html>\n";
+
+                                    // Abort processing
+                                    exit( );
+                            }
+
+                            // Attempt to write the new JPEG file
+                            if ( FALSE == put_jpeg_header_data( $filename, $filename, $jpeg_header_data ) )
+                            {
+                                    // Writing of the new file didn't work - output error message
+                                    echo "Error - Failure to write new JPEG : $filename <br/>\n";
+
+                                    // Output HTML with the form and data which was
+                                    // sent, to allow the user to fix it
+
+                                    $outputfilename = $filename;
+                                    include "Edit_File_info.php";
+                                    echo "</body>\n";
+                                    echo "</html>\n";
+
+                                    // Abort processing
+                                    exit( );
+                            }
 
 
-                ?>
+                            // Writing of new JPEG succeeded
 
-                <br>
-                <br>
-                <br>
-                <br>
+                            // Output information about new file
+
+                            echo "<h1>DONE! - $filename updated</h1>\n";
+                            echo "<p><a href=\"Example.php?jpeg_fname=$filename\" >View Full Metatdata Information</a></p>\n";
+                            echo "<p><a href=\"Edit_File_Info_Example.php?jpeg_fname=$filename\" >Re-Edit Photoshop File Info</a></p>\n";
+                            echo "<br/><br/>\n";
+                            echo "<p>Below is the updated image, you can save it and look at the changed metadata in your favorite image editor</p>\n";
+                            echo "<p><img src=\"$filename\" ></p>\n";
 
 
-                <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>  <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
+                    ?>
 
-                <br>
-                <br>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
 
+
+                    <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>  <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
+
+                    <br/>
+                    <br/>
+                </div>
         </body>
 
 </html>

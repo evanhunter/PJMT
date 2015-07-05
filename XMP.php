@@ -233,8 +233,8 @@ function read_XMP_array_from_text( $xmptext )
 function write_XMP_array_to_text( $xmparray )
 {
         // Add the XMP packet header
-        // The sequence 0xEFBBBF is the UTF-8 encoded version of the Unicode “zero
-        // width non-breaking space character” (U+FEFF), which is used for detecting
+        // The sequence 0xEFBBBF is the UTF-8 encoded version of the Unicode "zero
+        // width non-breaking space character" (U+FEFF), which is used for detecting
         // whether UTF-16 or UTF-8 is being used.
         $output_XMP_text = "<?xpacket begin='\xef\xbb\xbf' id='W5M0MpCehiHzreSzNTczkc9d'?>\n";
 
