@@ -13,7 +13,9 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.00
+* Revision:     1.01
+*
+* Changes:      1.00 -> 1.01 : changed get_IPTC to return partial data when error occurs
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -78,7 +80,8 @@ function get_IPTC( $Data_Str )
                 if ( strlen( substr($Data_Str,$pos) ) < 5 )
                 {
                         // Not enough data left for a record - Probably corrupt data - ERROR
-                        return FALSE;
+                        // Change: changed to return partial data as of revision 1.01
+                        return $OutputArray;
                 }
 
                 // Unpack data from IPTC record:
@@ -98,7 +101,8 @@ function get_IPTC( $Data_Str )
                 if ( strlen( substr( $Data_Str, $pos, $iptc_raw['IPTC_Size'] ) ) !== $iptc_raw['IPTC_Size'] )
                 {
                         // Not enough data left for the record content - Probably corrupt data - ERROR
-                        return FALSE;
+                        // Change: changed to return partial data as of revision 1.01
+                        return $OutputArray;
                 }
 
                 // Add the IPTC record to the output array
