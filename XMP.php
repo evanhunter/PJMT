@@ -16,13 +16,36 @@
 *
 * Project:      JPEG Metadata
 *
-* Revision:     1.00
+* Revision:     1.04
+*
+* Changes:      1.00 -> 1.04 : changed put_IPTC to fix a bug preventing the correct
+*               insertion of a XMP block where none existed previously
 *
 * URL:          http://electronics.ozhiker.com
 *
 * Copyright:    Copyright Evan Hunter 2004
-*               This file may be used freely for non-commercial purposes.For
-*               commercial uses please contact the author: evan@ozhiker.com
+*
+* License:      This file is part of the PHP JPEG Metadata Toolkit.
+*
+*               The PHP JPEG Metadata Toolkit is free software; you can
+*               redistribute it and/or modify it under the terms of the
+*               GNU General Public License as published by the Free Software
+*               Foundation; either version 2 of the License, or (at your
+*               option) any later version.
+*
+*               The PHP JPEG Metadata Toolkit is distributed in the hope
+*               that it will be useful, but WITHOUT ANY WARRANTY; without
+*               even the implied warranty of MERCHANTABILITY or FITNESS
+*               FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+*               for more details.
+*
+*               You should have received a copy of the GNU General Public
+*               License along with the PHP JPEG Metadata Toolkit; if not,
+*               write to the Free Software Foundation, Inc., 59 Temple
+*               Place, Suite 330, Boston, MA  02111-1307  USA
+*
+*               If you require a different license for commercial or other
+*               purposes, please contact the author: evan@ozhiker.com
 *
 ******************************************************************************/
 
@@ -123,7 +146,8 @@ function put_XMP_text( $jpeg_header_data, $newXMP )
         }
 
         // No pre-existing XMP/RDF found - insert a new one after any pre-existing APP0 or APP1 blocks
-
+        // Change: changed to initialise $i properly as of revision 1.04
+        $i = 0;
         // Loop until a block is found that isn't an APP0 or APP1
         while ( ( $jpeg_header_data[$i][SegName] == "APP0" ) || ( $jpeg_header_data[$i][SegName] == "APP1" ) )
         {
@@ -133,11 +157,11 @@ function put_XMP_text( $jpeg_header_data, $newXMP )
 
 
         // Insert a new XMP/RDF APP1 segment at the specified point.
-
-        array_splice($jpeg_header_data, $i - 1 , 0, array(      "SegType" => 0xE1,
-                                                                "SegName" => "APP1",
-                                                                "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xE1 ],
-                                                                "SegData" => "http://ns.adobe.com/xap/1.0/\x00" . $newXMP ) );
+        // Change: changed to properly construct array element as of revision 1.04 - requires two array statements not one, requires insertion at $i, not $i - 1
+        array_splice($jpeg_header_data, $i, 0, array( array(       "SegType" => 0xE1,
+                                                                        "SegName" => "APP1",
+                                                                        "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xE1 ],
+                                                                        "SegData" => "http://ns.adobe.com/xap/1.0/\x00" . $newXMP ) ) );
 
         // Return the headers with the new segment inserted
         return $jpeg_header_data;

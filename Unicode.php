@@ -17,9 +17,27 @@
 *
 * URL:          http://electronics.ozhiker.com
 *
-* Copyright:    Copyright Evan Hunter 2004
-*               This file may be used freely for non-commercial purposes.For
-*               commercial uses please contact the author: evan@ozhiker.com
+* License:      This file is part of the PHP JPEG Metadata Toolkit.
+*
+*               The PHP JPEG Metadata Toolkit is free software; you can
+*               redistribute it and/or modify it under the terms of the
+*               GNU General Public License as published by the Free Software
+*               Foundation; either version 2 of the License, or (at your
+*               option) any later version.
+*
+*               The PHP JPEG Metadata Toolkit is distributed in the hope
+*               that it will be useful, but WITHOUT ANY WARRANTY; without
+*               even the implied warranty of MERCHANTABILITY or FITNESS
+*               FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+*               for more details.
+*
+*               You should have received a copy of the GNU General Public
+*               License along with the PHP JPEG Metadata Toolkit; if not,
+*               write to the Free Software Foundation, Inc., 59 Temple
+*               Place, Suite 330, Boston, MA  02111-1307  USA
+*
+*               If you require a different license for commercial or other
+*               purposes, please contact the author: evan@ozhiker.com
 *
 ******************************************************************************/
 
