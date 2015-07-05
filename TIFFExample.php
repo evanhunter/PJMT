@@ -13,9 +13,10 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.11
+* Revision:     1.12
 *
 * Changes:      1.10 -> 1.11 : Changed displayed toolkit version numbers to reference Toolkit_Version.php
+*               1.11 -> 1.12 : Added parsing of filename to prevent attacks, changed to use _GET variable
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -73,8 +74,8 @@
                         include 'EXIF.php';
 
                         // Retrieve the TIFF image filename from the http url request
-                        if ( ( !array_key_exists( 'tiff_fname', $GLOBALS['HTTP_GET_VARS'] ) ) ||
-                             ( $GLOBALS['HTTP_GET_VARS']['tiff_fname'] == "" ) )
+                        if ( ( !array_key_exists( 'tiff_fname', $_GET ) ) ||
+                             ( $_GET['tiff_fname'] == "" ) )
                         {
                                 echo "<title>No image filename defined</title>\n";
                                 echo "</head>\n";
@@ -86,7 +87,19 @@
                         }
                         else
                         {
-                                $filename = $GLOBALS['HTTP_GET_VARS']['tiff_fname'];
+                                $filename = $_GET['tiff_fname'];
+
+                                // Sanitize the filename to remove any hack attempts
+                                if ( 0 == preg_match ( '/^\.?\/?([_A-Za-z0-9]+\.tif?f)$/i', $filename ) )
+                                {
+                                    echo "<title>Bad image filename defined</title>\n";
+                                    echo "</head>\n";
+                                    echo "<body>\n";
+                                    echo "<p>Bad image filename defined - Must be tif or tiff</p>\n";
+                                    echo "<p><a href=\"http://www.ozhiker.com/electronics/pjmt/\" >PHP JPEG Metadata Toolkit version " . $GLOBALS['Toolkit_Version'] . ", Copyright (C) 2004 Evan Hunter</a></p>\n";         // Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11
+                                    echo "</body>\n";
+                                    exit( );
+                                }
                         }
 
 

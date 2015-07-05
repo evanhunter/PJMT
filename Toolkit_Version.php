@@ -12,7 +12,7 @@
 *
 * Project:      JPEG Metadata
 *
-* Revision:     1.11
+* Revision:     1.12
 *
 * NOTE:         This file will change with every revision update, hence will not
 *               be shown in the changes list
@@ -45,6 +45,6 @@
 *
 ******************************************************************************/
 
-$GLOBALS['Toolkit_Version'] = "1.11";
+$GLOBALS['Toolkit_Version'] = "1.12";
 
 ?>

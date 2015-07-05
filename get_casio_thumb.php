@@ -15,7 +15,9 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.00
+* Revision:     1.12
+*
+* Changes:      1.00 -> 1.12 : changed to use _GET variable
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -54,7 +56,7 @@
 
         // retrieve the filename from the URL parameters
 
-        $filename = $GLOBALS['HTTP_GET_VARS']['filename'];
+        $filename = $_GET['filename'];
 
 
         // Retrieve any EXIF data in the file

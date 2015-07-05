@@ -15,10 +15,11 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.11
+* Revision:     1.12
 *
 *               1.00 -> 1.11 : Added support for Photoshop IRB thumbnails which are
 *                              embedded within EXIF information (used in TIFF files)
+*               1.11 -> 1.12 : changed to use _GET variable
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -54,7 +55,7 @@
 
         // retrieve the filename from the URL parameters
 
-        $filename = $GLOBALS['HTTP_GET_VARS']['filename'];
+        $filename = $_GET['filename'];
 
         // Change: Check for file extension rather than assuming JPEG as of 1.11
         // Retrieve the Filename Extension
