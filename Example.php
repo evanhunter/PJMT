@@ -13,7 +13,12 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.00
+* Revision:     1.10
+*
+* Changes:      1.00 -> 1.10 : Changed name of GET parameter from 'filename' to 'jpeg_fname'
+*                              to stop script-kiddies using the google command 'allinurl:*.php?filename=*'
+*                              to find servers to attack
+*                              Changed behavior when no filename is given, to be cleaner
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -44,7 +49,7 @@
 ***************************************************************************-->
 
         <head>
-        
+
                 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
                 <STYLE TYPE="text/css" MEDIA="screen, print, projection">
                 <!--
@@ -66,8 +71,8 @@
 
                         // Hide any unknown EXIF tags
                         $GLOBALS['HIDE_UNKNOWN_TAGS'] = TRUE;
-                        
-                        
+
+
                         include 'JPEG.php';
                         include 'JFIF.php';
                         include 'PictureInfo.php';
@@ -76,31 +81,47 @@
                         include 'EXIF.php';
 
                         // Retrieve the JPEG image filename from the http url request
-                        if ($GLOBALS['HTTP_GET_VARS']['filename']=="")
+                        if ( ( !array_key_exists( 'jpeg_fname', $GLOBALS['HTTP_GET_VARS'] ) ) ||
+                             ( $GLOBALS['HTTP_GET_VARS']['jpeg_fname'] == "" ) )
                         {
-                                echo "<p>No filename defined</p>\n";
+                                echo "<title>No image filename defined</title>\n";
+                                echo "</head>\n";
+                                echo "<body>\n";
+                                echo "<p>No image filename defined - use GET method with field: jpeg_fname</p>\n";
+                                echo "<p><a href=\"http://www.ozhiker.com/electronics/pjmt/\" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>\n";
+                                echo "</body>\n";
+                                exit( );
                         }
                         else
                         {
-                                $filename = $GLOBALS['HTTP_GET_VARS']['filename'];
+                                $filename = $GLOBALS['HTTP_GET_VARS']['jpeg_fname'];
                         }
 
 
                         // Output the title
                         echo "<title>Metadata details for $filename</title>";
-                        
+
                         // Retrieve the header information
                         $jpeg_header_data = get_jpeg_header_data( $filename );
 
                  ?>
 
         </head>
-        
+
         <body>
 
-                <a href="/electronics/pjmt/">PHP JPEG Metadata Toolkit</a>
+                <p>Interpreted using: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>
+                <br>
+                <br>
 
-                <h2><B><U>Metadata for &quot;<?php echo $filename; ?>&quot;</U></B></h2>
+                <h1><B><U>Metadata for &quot;<?php echo $filename; ?>&quot;</U></B></h1>
+                <br>
+
+                <!-- Output a link allowing user to edit the Photoshop File Info -->
+                <h4><a href="Edit_File_Info_Example.php?jpeg_fname=<?php echo $filename; ?>" >Click here to edit the Photoshop File Info for this file</a></h4>
+                <br>
+
+
 
                 <!-- Output the information about the APP segments -->
                 <?php   echo Generate_JPEG_APP_Segment_HTML( $jpeg_header_data ); ?>
@@ -129,10 +150,10 @@
                 <BR>
                 <HR>
                 <BR>
-                
+
                 <!-- Output the JFIF Extension Information -->
                 <?php   echo Interpret_JFXX_to_HTML( get_JFXX( $jpeg_header_data ), $filename ); ?>
-                
+
                 <BR>
                 <HR>
                 <BR>
@@ -157,23 +178,23 @@
                 <BR>
                 <HR>
                 <BR>
-                
+
                 <!-- Output the Photoshop IRB (including the IPTC-NAA info -->
                 <?php   echo Interpret_IRB_to_HTML( get_Photoshop_IRB( $jpeg_header_data ), $filename ); ?>
 
                 <BR>
                 <HR>
                 <BR>
-                
+
                 <!-- Output the Meta Information -->
                 <?php   echo Interpret_EXIF_to_HTML( get_Meta_JPEG( $filename ), $filename );  ?>
 
                 <BR>
                 <HR>
                 <BR>
-                
+
                 <!-- Display the original image -->
-                
+
                 <h2>Original Image</h2>
                 <?php   echo "<img src=\"$filename\">";  ?>
 
@@ -182,12 +203,8 @@
                 <BR>
                 <BR>
                 <p>Interpreted using:</p>
-                <p>PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</p>
+                <p><a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>
 
         </body>
 
 </html>
-
-
-
-

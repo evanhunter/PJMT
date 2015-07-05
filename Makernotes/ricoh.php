@@ -115,7 +115,7 @@ function get_Ricoh_Makernote( $Makernote_Tag, $EXIF_Array, $filehnd, $Make_Field
                 // Ricoh not in the Maker field - abort
                 return FALSE;
         }
-        
+
 
         // Check if the Text Makernote header exists at the start of the Makernote
         if ( ( substr( $Makernote_Tag['Data'], 0, 2 ) === "Rv" ) ||
@@ -128,7 +128,7 @@ function get_Ricoh_Makernote( $Makernote_Tag, $EXIF_Array, $filehnd, $Make_Field
 
                 // Return the new Makernote tag
                 return $Makernote_Tag;
-                
+
         }
         // Check if the Empty Makernote header exists at the start of the Makernote
         else if ( $Makernote_Tag['Data'] === str_repeat ( "\x00", strlen( $Makernote_Tag['Data'] )) )
@@ -140,7 +140,7 @@ function get_Ricoh_Makernote( $Makernote_Tag, $EXIF_Array, $filehnd, $Make_Field
 
                 // Return the new Makernote tag
                 return $Makernote_Tag;
-                
+
         }
         // Check if the IFD Makernote header exists at the start of the Makernote
         else if ( ( substr( $Makernote_Tag['Data'], 0, 5 ) === "RICOH" ) ||
@@ -168,7 +168,7 @@ function get_Ricoh_Makernote( $Makernote_Tag, $EXIF_Array, $filehnd, $Make_Field
                       ( array_key_exists( 0x2001, $Makernote_Tag['Decoded Data'][0] ) ) )
                 {
                         // Ricoh Sub-IFD tag exists - Process it
-                
+
                         // Grab the Sub-IFD tag for easier processing
                         $SubIFD_Tag = &$Makernote_Tag['Decoded Data'][0][0x2001];
 
@@ -203,9 +203,9 @@ function get_Ricoh_Makernote( $Makernote_Tag, $EXIF_Array, $filehnd, $Make_Field
                                 $SubIFD_Tag['Type'] = "String";
                                 $SubIFD_Tag['Text Value'] = "Corrupted Ricoh Sub IFD";
                         }
-                
+
                 }
-                
+
                 // Return the new makernote tag
                 return $Makernote_Tag;
         }
@@ -214,7 +214,7 @@ function get_Ricoh_Makernote( $Makernote_Tag, $EXIF_Array, $filehnd, $Make_Field
                 // Unrecognised header for makernote - abort
                 return FALSE;
         }
-        
+
         // Shouldn't get here
         return False;
 }
@@ -266,10 +266,10 @@ function get_Ricoh_Makernote_Html( $Makernote_tag, $filename )
 
                 // Replace the semicolon dividers with line break html tags
                 $output_str .= str_replace ( ";", "<BR>\n", $Makernote_tag['Data'] );
-                
+
                 // Close the html
                 $output_str .= "</td></tr></table>";
-                
+
                 // Return the html
                 return  $output_str;
         }
@@ -333,9 +333,9 @@ function get_Ricoh_Text_Value( $Exif_Tag, $Tag_Definitions_Name )
                         $tmp = implode ( "\x00", $Exif_Tag['Data']);
                         return "\"" .HTML_UTF8_Escape( $tmp ) . "\" (" . bin2hex( $tmp ) . " hex)";
                 }
-        
+
         }
-        
+
         // Unknown tag or tag definitions
         return FALSE;
 

@@ -12,7 +12,11 @@
 *
 * Project:      JPEG Metadata
 *
-* Revision:     1.00
+* Revision:     1.10
+*
+* Changes:      1.00 -> 1.10 : Changed read_xml_array_from_text to fix problem that
+*                              caused the whitespace (especially newlines) to be
+*                              destroyed when converting xml text to an xml array
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -72,15 +76,19 @@ function read_xml_array_from_text( $xmltext )
         // Create an instance of a xml parser to parse the XML text
         $xml_parser = xml_parser_create( "UTF-8" );
 
-        // this option ensures that unneccessary white spaces
-        // between successive elements will be removed
-        if ( xml_parser_set_option($xml_parser,XML_OPTION_SKIP_WHITE,1) == FALSE )
+
+        // Change: Fixed problem that caused the whitespace (especially newlines) to be destroyed when converting xml text to an xml array, as of revision 1.10
+
+        // We would like to remove unneccessary white space, but this will also
+        // remove things like newlines (&#xA;) in the XML values, so white space
+        // will have to be removed later
+        if ( xml_parser_set_option($xml_parser,XML_OPTION_SKIP_WHITE,0) == FALSE )
         {
                 // Error setting case folding - destroy the parser and return
                 xml_parser_free($xml_parser);
                 return FALSE;
         }
-        
+
         // to use XML code correctly we have to turn case folding
         // (uppercasing) off. XML is case sensitive and upper
         // casing is in reality XML standards violation
@@ -102,12 +110,35 @@ function read_xml_array_from_text( $xmltext )
         // Destroy the xml parser
         xml_parser_free($xml_parser);
 
+
+        // Change: Fixed problem that caused the whitespace (especially newlines) to be destroyed when converting xml text to an xml array, as of revision 1.10
+
+        // Since the xml was processed with whitespace enabled, it will have many values which are
+        // only whitespace. These need to be removed to make a sensible array.
+
+        $newvals = array( );
+
+        // Cycle through each of the items
+        foreach( $vals as $valno => $val )
+        {
+                // If the item has a whitespace only value, remove it
+                if ( ( array_key_exists( 'value', $val ) ) && (trim( $val[ 'value' ] ) == "" ) )
+                {
+                        unset( $val[ 'value' ] );
+                }
+                // If the item has a value (which will be non blank now) or is of type other than cdata, add it to the new array
+                if ( ( $val[ 'type' ] != 'cdata' ) || ( array_key_exists( 'value', $val ) ) )
+                {
+                        $newvals[] = $val;
+                }
+
+        }
+
         // The xml_parse_into_struct function returns a flat version
         // of the XML data, where each tag has a level number attached.
         // This is very difficult to work with, so it needs to be
         // converted to a tree structure before being returned
-
-        return xml_get_children($vals, $i=0);
+        return xml_get_children($newvals, $i=0);
 
 }
 
@@ -152,7 +183,7 @@ function write_xml_array_to_text( $xmlarray, $indentlevel )
 
                 // Add the indent, then the cleaned tag name to the output
                 $output_xml_text .= str_repeat ( " ", $indentlevel ) . "<" . xml_UTF8_clean( $xml_elem['tag'] );
-                
+
                 // Check if there are any attributes for this tag
                 if (array_key_exists('attributes',$xml_elem))
                 {
@@ -182,7 +213,7 @@ function write_xml_array_to_text( $xmlarray, $indentlevel )
 
                         // Add a newline to the output, so the sub-elements start on a fresh line
                         $output_xml_text .= "\n";
-                        
+
                         // Recursively call this function to output the sub-elements, and add the result to the output
                         $output_xml_text .= write_xml_array_to_text( $xml_elem['children'], $indentlevel + 1 );
 

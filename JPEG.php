@@ -13,7 +13,10 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.00
+* Revision:     1.10
+*
+* Changes:      1.00 -> 1.10 : changed put_jpeg_header_data to check if the data
+*                              being written exists
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -71,7 +74,7 @@ function get_jpeg_header_data( $filename )
         // not being able to open files. The file_exists would have been used, but it
         // does not work with files fetched over http or ftp.
         $filehnd = @fopen($filename, 'rb');
-        
+
         // Check if the file opened successfully
         if ( ! $filehnd  )
         {
@@ -79,8 +82,8 @@ function get_jpeg_header_data( $filename )
                 echo "<p>Could not open file $filename</p>\n";
                 return FALSE;
         }
-        
-        
+
+
         // Read the first two characters
         $data = network_safe_fread( $filehnd, 2 );
 
@@ -128,7 +131,7 @@ function get_jpeg_header_data( $filename )
 
                         // Save the start position of the data
                         $segdatastart = ftell( $filehnd );
-                        
+
                         // Read the segment data with length indicated by the previously read size
                         $segdata = network_safe_fread( $filehnd, $decodedsize['size'] - 2 );
 
@@ -206,6 +209,15 @@ function get_jpeg_header_data( $filename )
 
 function put_jpeg_header_data( $old_filename, $new_filename, $jpeg_header_data )
 {
+
+        // Change: added check to ensure data exists, as of revision 1.10
+        // Check if the data to be written exists
+        if ( $jpeg_header_data == FALSE )
+        {
+                // Data to be written not valid - abort
+                return FALSE;
+        }
+
         // extract the compressed image data from the old file
         $compressed_image_data = get_jpeg_image_data( $old_filename );
 
@@ -305,7 +317,7 @@ function get_jpeg_Comment( $jpeg_header_data )
         {
                 $i++;
         }
-        
+
         // Check if a COM segment has been found
         if (  $i < count( $jpeg_header_data) )
         {
@@ -321,6 +333,60 @@ function get_jpeg_Comment( $jpeg_header_data )
 
 /******************************************************************************
 * End of Function:     get_jpeg_Comment
+******************************************************************************/
+
+
+/******************************************************************************
+*
+* Function:     put_jpeg_Comment
+*
+* Description:  Creates a new JPEG Comment segment from a string, and inserts
+*               this segment into the supplied JPEG header array
+*
+* Parameters:   jpeg_header_data - a JPEG header data array in the same format
+*                                  as from get_jpeg_header_data, into which the
+*                                  new Comment segment will be put
+*               $new_Comment - a string containing the new Comment
+*
+* Returns:      jpeg_header_data - the JPEG header data array with the new
+*                                  JPEG Comment segment added
+*
+******************************************************************************/
+
+function put_jpeg_Comment( $jpeg_header_data, $new_Comment )
+{
+        //Cycle through the header segments
+        for( $i = 0; $i < count( $jpeg_header_data ); $i++ )
+        {
+                // If we find an COM header,
+                if ( strcmp ( $jpeg_header_data[$i]['SegName'], "COM" ) == 0 )
+                {
+                        // Found a preexisting Comment block - Replace it with the new one and return.
+                        $jpeg_header_data[$i]['SegData'] = $new_Comment;
+                        return $jpeg_header_data;
+                }
+        }
+
+
+
+        // No preexisting Comment block found, find where to put it by searching for the highest app segment
+        $i = 0;
+        while ( ( $i < count( $jpeg_header_data ) ) && ( $jpeg_header_data[$i]["SegType"] >= 0xE0 ) )
+        {
+                $i++;
+        }
+
+
+        // insert a Comment segment new at the position found of the header data.
+        array_splice($jpeg_header_data, $i , 0, array( array(   "SegType" => 0xFE,
+                                                                "SegName" => $GLOBALS[ "JPEG_Segment_Names" ][ 0xFE ],
+                                                                "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xFE ],
+                                                                "SegData" => $new_Comment ) ) );
+        return $jpeg_header_data;
+}
+
+/******************************************************************************
+* End of Function:     put_jpeg_Comment
 ******************************************************************************/
 
 
@@ -392,12 +458,12 @@ function get_jpeg_intrinsic_values( $jpeg_header_data )
         {
                 $i++;
         }
-        
+
         // Check if a SOF segment has been found
         if ( substr( $jpeg_header_data[$i]['SegName'], 0, 3 ) == "SOF" )
         {
                 // SOF segment was found, extract the information
-                
+
                 $data = $jpeg_header_data[$i]['SegData'];
 
                 // First byte is Bits per component
@@ -411,7 +477,7 @@ function get_jpeg_intrinsic_values( $jpeg_header_data )
 
                 // Sixth byte is number of components
                 $numcomponents = ord( $data{ 5 } );
-                
+
                 // Following this is a table containing information about the components
                 for( $i = 0; $i < $numcomponents; $i++ )
                 {
@@ -476,10 +542,10 @@ function Interpret_intrinsic_values_to_HTML( $values )
                 {
                         $OutputStr .= "<tr class=\"JPEG_Intrinsic_Table_Row\"><td class=\"JPEG_Intrinsic_Caption_Cell\">Colour Depth</td><td class=\"JPEG_Intrinsic_Value_Cell\">" . ($values['Bits per Component'] * count( $values['Components'] ) ) . " bit</td></tr>\n";
                 }
-        
+
                 // Close Table
                 $OutputStr .= "</table>\n";
-        
+
                 // Return html
                 return $OutputStr;
         }
@@ -570,7 +636,7 @@ function get_jpeg_image_data( $filename )
                         // convert the size bytes to an integer
                         $decodedsize = unpack ("nsize", $sizestr);
 
-                        // Read the segment data with length indicated by the previously read size
+                         // Read the segment data with length indicated by the previously read size
                         $segdata = network_safe_fread( $filehnd, $decodedsize['size'] - 2 );
                 }
 
@@ -584,7 +650,7 @@ function get_jpeg_image_data( $filename )
                         // Can't use the filesize function to work out
                         // how much to read, as it won't work for files being read by http or ftp
                         // So instead read 1Mb at a time till EOF
-                        
+
                         $compressed_data = "";
                         do
                         {
@@ -612,7 +678,7 @@ function get_jpeg_image_data( $filename )
 
         // Close File
         fclose($filehnd);
-        
+
         // Alow the user to abort from now on
         ignore_user_abort(false);
 
@@ -669,12 +735,12 @@ function Generate_JPEG_APP_Segment_HTML( $jpeg_header_data )
 
 
         // Cycle through each segment in the array
-        
+
         foreach( $jpeg_header_data as $jpeg_header )
         {
-        
+
                 // Check if the segment is a APP segment
-                
+
                 if ( ( $jpeg_header['SegType'] >= 0xE0 ) && ( $jpeg_header['SegType'] <= 0xEF ) )
                 {
                         // This is an APP segment
@@ -684,7 +750,7 @@ function Generate_JPEG_APP_Segment_HTML( $jpeg_header_data )
 
                         // Some Segment names are either too long or not meaningfull, so
                         // we should clean them up
-                        
+
                         if ( $seg_name == "http://ns.adobe.com/xap/1.0/" )
                         {
                                 $seg_name = "XAP/RDF (\"http://ns.adobe.com/xap/1.0/\")";
@@ -711,15 +777,15 @@ function Generate_JPEG_APP_Segment_HTML( $jpeg_header_data )
 
                         // Clean the segment name so it doesn't cause problems with HTML
                         $seg_name = htmlentities( $seg_name );
-                        
+
                         // Output a Table row containing this APP segment
                         $output .= "<tr class=\"JPEG_APP_Segments_Table_Row\"><td class=\"JPEG_APP_Segments_Caption_Cell\">$seg_name</td><td class=\"JPEG_APP_Segments_Type_Cell\">" . $jpeg_header['SegName'] . "</td><td  class=\"JPEG_APP_Segments_Size_Cell\" align=\"right\">" . strlen( $jpeg_header['SegData']). " bytes</td></tr>\n";
                 }
         }
-        
+
         // Close the table
         $output .= "</table>\n";
-        
+
         // Return the HTML
         return $output;
 }
@@ -760,7 +826,7 @@ function network_safe_fread( $file_handle, $length )
         {
                 $data .= fread( $file_handle, $length-strlen($data) );
         }
-        
+
         // return the data read
         return $data;
 }

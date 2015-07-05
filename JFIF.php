@@ -210,7 +210,7 @@ function Interpret_JFIF_to_HTML( $JFIF_array, $filename )
 
                 $output .= "</table><br>\n";
         }
-        
+
         return $output;
 
 }
@@ -317,7 +317,7 @@ function put_JFXX( $jpeg_header_data, $new_JFXX_array )
                                 $jpeg_header_data[$i]['SegData'] = $packed_data;
                                 return $jpeg_header_data;
                         }
-                        
+
                         // if it has the JFIF label,
                         if( strncmp ( $jpeg_header_data[$i][SegData], "JFIF\x00", 5) == 0 )
                         {
@@ -329,7 +329,7 @@ function put_JFXX( $jpeg_header_data, $new_JFXX_array )
 
 
         // No preexisting JFXX block found
-        
+
         // Check if a JFIF segment was found,
         if ( $JFIF_pos !== -1 )
         {
@@ -339,13 +339,13 @@ function put_JFXX( $jpeg_header_data, $new_JFXX_array )
                                                                                         "SegName" => "APP0",
                                                                                         "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xE0 ],
                                                                                         "SegData" => $packed_data ) ) );
-        
+
         }
         else
         {
                 // No pre-existing JFIF segment was found,
                 // insert a new JFIF and the new JFXX segment at the start of the array.
-                
+
                 // Insert new JFXX segment
                 array_splice($jpeg_header_data, 0 , 0, array( array(   "SegType" => 0xE0,
                                                                         "SegName" => "APP0",
@@ -361,7 +361,7 @@ function put_JFXX( $jpeg_header_data, $new_JFXX_array )
                                                                         "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xE0 ],
                                                                         "SegData" => $packed_data ) ) );
         }
-        
+
 
         return $jpeg_header_data;
 }

@@ -16,10 +16,12 @@
 *
 * Project:      JPEG Metadata
 *
-* Revision:     1.04
+* Revision:     1.10
 *
 * Changes:      1.00 -> 1.04 : changed put_IPTC to fix a bug preventing the correct
 *               insertion of a XMP block where none existed previously
+*
+*               1.04 -> 1.10 : changed put_XMP_text to fix some array indexes which were missing qoutes
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -133,13 +135,13 @@ function put_XMP_text( $jpeg_header_data, $newXMP )
         for( $i = 0; $i < count( $jpeg_header_data ); $i++ )
         {
                 // If we find an APP1 header,
-                if ( strcmp ( $jpeg_header_data[$i][SegName], "APP1" ) == 0 )
+                if ( strcmp ( $jpeg_header_data[$i]['SegName'], "APP1" ) == 0 )
                 {
                         // And if it has the Adobe XMP/RDF label (http://ns.adobe.com/xap/1.0/\x00) ,
-                        if( strncmp ( $jpeg_header_data[$i][SegData], "http://ns.adobe.com/xap/1.0/\x00", 29) == 0 )
+                        if( strncmp ( $jpeg_header_data[$i]['SegData'], "http://ns.adobe.com/xap/1.0/\x00", 29) == 0 )
                         {
                                 // Found a preexisting XMP/RDF block - Replace it with the new one and return.
-                                $jpeg_header_data[$i][SegData] = "http://ns.adobe.com/xap/1.0/\x00" . $newXMP;
+                                $jpeg_header_data[$i]['SegData'] = "http://ns.adobe.com/xap/1.0/\x00" . $newXMP;
                                 return $jpeg_header_data;
                         }
                 }
@@ -149,7 +151,7 @@ function put_XMP_text( $jpeg_header_data, $newXMP )
         // Change: changed to initialise $i properly as of revision 1.04
         $i = 0;
         // Loop until a block is found that isn't an APP0 or APP1
-        while ( ( $jpeg_header_data[$i][SegName] == "APP0" ) || ( $jpeg_header_data[$i][SegName] == "APP1" ) )
+        while ( ( $jpeg_header_data[$i]['SegName'] == "APP0" ) || ( $jpeg_header_data[$i]['SegName'] == "APP1" ) )
         {
                 $i++;
         }
@@ -308,7 +310,7 @@ function Interpret_XMP_to_HTML( $XMP_array )
                         // RDF section not found - abort
                         return "";
                 }
-                
+
                 // Add heading to html output
                 $output .= "<h2 class=\"XMP_Main_Heading\">Contains Extensible Metadata Platform (XMP) / Resource Description Framework (RDF) Information</h2>\n";
 
@@ -320,7 +322,7 @@ function Interpret_XMP_to_HTML( $XMP_array )
                         if ( ( $RDF_Item['tag'] == "rdf:Description" ) && ( array_key_exists( 'children', $RDF_Item ) ) )
                         {
                                 // Item is a rdf:Description tag.
-                                
+
                                 // Cycle through each of the attributes for this tag, looking
                                 // for a xmlns: attribute, which tells us what Namespace the
                                 // sub-items will be in.
@@ -387,13 +389,13 @@ function Interpret_XMP_to_HTML( $XMP_array )
                                         }
 
                                 }
-                                
+
                                 // Add the start of the table to the HTML output
                                 $output .= "\n<table  class=\"XMP_Table\" border=1>\n";
 
 
                                 // Check if this element has sub-items
-                                
+
                                 if ( array_key_exists( 'children', $RDF_Item ) )
                                 {
 
@@ -407,7 +409,7 @@ function Interpret_XMP_to_HTML( $XMP_array )
                                                 $tag_caption = HTML_UTF8_Escape( $tag_caption );
                                                 // Escape the text of the value for html and turn newlines to <br>
                                                 $value_str = nl2br( HTML_UTF8_Escape( $value_str ) );
-                                                
+
                                                 // Check if the value is empty - if it is, put a no-break-space in
                                                 // to ensure the table cell gets drawn
                                                 if ( $value_str == "" )
@@ -421,8 +423,8 @@ function Interpret_XMP_to_HTML( $XMP_array )
 
                                 // Add the end of the table to the html
                                 $output .= "\n</table>\n";
-                                
-                                
+
+
                         }
                         else
                         {
@@ -430,8 +432,8 @@ function Interpret_XMP_to_HTML( $XMP_array )
                         }
                 }
 
-                
-                
+
+
         }
         // Return the resulting HTML
         return $output;
@@ -499,7 +501,7 @@ function Interpret_RDF_Item( $Item )
 
         // Create a string to receive the HTML output
         $value_str = "";
-        
+
         // Check if the item has is in the lookup table of tag captions
         if ( array_key_exists( $Item['tag'], $GLOBALS[ 'XMP_tag_captions' ] ) )
         {
@@ -511,7 +513,7 @@ function Interpret_RDF_Item( $Item )
                 // Item has no caption - make one
                 $tag_caption = "Unknown field " . $Item['tag'];
         }
-                
+
 
         // Process specially the item according to it's tag
         switch ( $Item['tag'] )
@@ -523,7 +525,7 @@ function Interpret_RDF_Item( $Item )
                         // Make a new date string with Day, Month, Year
                         $value_str = "$day/$month/$year";
                         break;
-                                
+
                 default :
                         $value_str = get_RDF_field_html_value( $Item );
                         break;
@@ -531,7 +533,7 @@ function Interpret_RDF_Item( $Item )
 
 
 
-                                
+
         // Return the captiona and value
         return array($tag_caption, $value_str);
 }
@@ -562,14 +564,14 @@ function get_RDF_field_html_value( $rdf_item )
 {
         // Create a string to receive the output text
         $output_str = "";
-        
+
         // Check if the item has a value
         if ( array_key_exists( 'value', $rdf_item ) )
         {
                 // The item does have a value - add it to the text
                 $output_str .= $rdf_item['value'];
         }
-        
+
         // Check if the item has any attributes
         if ( array_key_exists( 'attributes', $rdf_item ) )
         {
@@ -613,17 +615,17 @@ function get_RDF_field_html_value( $rdf_item )
                                                 $output_str .= "List of Alternates:\n";
                                                 $output_str .= interpret_RDF_collection( $child_item );
                                                 break;
-                                                
+
                                         case "rdf:Bag":
                                                 $output_str .= "Unordered List:\n";
                                                 $output_str .= interpret_RDF_collection( $child_item );
                                                 break;
-                                                
+
                                         case "rdf:Seq":
                                                 $output_str .= "Ordered List:\n";
                                                 $output_str .= interpret_RDF_collection( $child_item );
                                                 break;
-                                                
+
                                         // Sub-Resource
                                         case "rdf:Description":
                                                 // Check that the item has sub items
@@ -640,7 +642,7 @@ function get_RDF_field_html_value( $rdf_item )
                                                         $output_str = rtrim( $output_str );
                                                 }
                                                 break;
-                                                
+
                                         // Other
                                         default:
                                                 $output_str .= "Unknown Sub Item type:". $child_item[ 'tag' ]. "\n";
@@ -692,11 +694,11 @@ function interpret_RDF_collection( $item )
 {
         // Create a string to receive the output
         $output_str = "";
-        
+
         // Check if the collection item has sub-items
         if ( array_key_exists( 'children', $item ) )
         {
-        
+
                 // Cycle through each of the sub-items
                 foreach( $item['children'] as $list_item )
                 {
@@ -705,7 +707,7 @@ function interpret_RDF_collection( $item )
                         {
                                 continue 1;
                         }
-                        
+
                         // Check that the sub-item tag is either rdf:li or rdf:_1 ....
                         // This signifies it is a list item of the collection
                         if ( ( $list_item['tag'] == "rdf:li" ) ||
@@ -739,14 +741,14 @@ function interpret_RDF_collection( $item )
                                                 }
                                         }
                                 }
-                                
+
                                 // Check if the list item has a value
                                 if ( array_key_exists( 'value', $list_item ) )
                                 {
                                         // Value found, add it to the output
                                         $output_str .= get_RDF_field_html_value( $list_item ) . "\n";
                                 }
-                                
+
                         }
                 }
                 // The list of sub-items formed will have a trailing \n, remove it.

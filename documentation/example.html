@@ -4,7 +4,7 @@
                 <link rel=StyleSheet href="style.css" type="text/css">
                 <META NAME="keywords" CONTENT="JPEG Metadata Application Segments APP0 APP1 APP2 APP3 APP12 APP13 APP14 EXIF DCF XMP RDF Photoshop IRB IPTC DCMI JFIF">
 
-                <title>The PHP Metadata Toolkit - Documentation</title>
+                <title>The PHP JPEG Metadata Toolkit - Documentation</title>
         </head>
 
         <body>
@@ -12,23 +12,23 @@
                         <H1 align="center" style="padding:15">The PHP JPEG Metadata Toolkit - Documentation</H1>
                 </div>
 
-                <a href="index.html">Go to Documentation - Home</a>
+                <a href="examples.html">Go to Documentation - Examples</a>
 
                 <div class="maintext">
 
-                <h2>Example Script</h2>
+                <h2>Example Metadata Display Script</h2>
 
                 <p>
-                        Included with the PHP JPEG Metadata Toolkit is an example script, which shows how the library
-                        can be used to retrieve metadata from a JPEG image file. This is an explanation of some of the
+                        This example script is included with the PHP JPEG Metadata Toolkit. It shows how the library
+                        can be used to display detailed metadata from a JPEG image file. This is an explanation of some of the
                         commands used in the script.
                 </p>
-                
+
                 <a href="http://www.ozhiker.com/electronics/pjmt/library/list_contents.php4?filename=Example.php">
                         Click here to see the script</a>
-                        
+
                 <br>
-                
+
                 <br>
                 <br>
                 <br>
@@ -74,7 +74,7 @@
                         </tr>
 
                 </table>
-                
+
                 <br>
                 <br>
 
@@ -91,15 +91,15 @@
 
                 <br>
                 <br>
-                
+
                 <p>To display the Photoshop IRB and IPTC-NAA information, use:</p>
                 <pre style="color:brown">
         echo Interpret_IRB_to_HTML( get_Photoshop_IRB( get_jpeg_header_data( $filename ) ), $filename );
                 </pre>
-                
+
                 <br>
                 <br>
-                
+
                 <p>
                         Note: The HTML returned from these functions is just a fragment, and requires
                         &lt;HTML&gt;, &lt;HEAD&gt; and &lt;BODY&gt; tags to be provided.

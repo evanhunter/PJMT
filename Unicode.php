@@ -13,7 +13,17 @@
 *
 * Project:      JPEG Metadata
 *
-* Revision:     1.00
+* Revision:     1.10
+*
+* Changes:      1.00 -> 1.10 : Added the following functions:
+*                              smart_HTML_Entities
+*                              smart_htmlspecialchars
+*                              HTML_UTF16_UnEscape
+*                              HTML_UTF8_UnEscape
+*                              changed HTML_UTF8_Escape and HTML_UTF16_Escape to
+*                              use smart_htmlspecialchars, so that characters which
+*                              were already escaped would remain intact
+*
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -127,7 +137,7 @@ function UTF8_fix( $utf8_text )
 {
         // Initialise the current position in the string
         $pos = 0;
-        
+
         // Create a string to accept the well formed output
         $output = "" ;
 
@@ -139,7 +149,7 @@ function UTF8_fix( $utf8_text )
 
                 // Check what the first character is - it will tell us how many bytes the
                 // Unicode value covers
-                
+
                 if ( ( $chval >= 0x00 ) && ( $chval <= 0x7F ) )
                 {
                         // 1 Byte UTF-8 Unicode (7-Bit ASCII) Character
@@ -256,10 +266,10 @@ function UTF16_fix( $utf16_text, $MSB_first )
                         // Error - no second byte to this UTF-16 value - end processing
                         continue 1;
                 }
-                
+
                 // Skip over character just read
                 $pos++;
-                
+
                 // Calculate the 16 bit unicode value
                 if ( $MSB_first )
                 {
@@ -271,9 +281,9 @@ function UTF16_fix( $utf16_text, $MSB_first )
                         // Little Endian
                         $UTF16_val = $chval2 * 0x100 + $chval1;
                 }
-                
-                
-                
+
+
+
                 if ( ( ( $UTF16_val >= 0x0000 ) && ( $UTF16_val <= 0xD7FF ) ) ||
                      ( ( $UTF16_val >= 0xE000 ) && ( $UTF16_val <= 0xFFFF ) ) )
                 {
@@ -327,7 +337,7 @@ function UTF16_fix( $utf16_text, $MSB_first )
                                 // Error - not enough data for low surrogate - end processing
                                 continue 1;
                         }
-                        
+
                 }
                 else
                 {
@@ -335,7 +345,7 @@ function UTF16_fix( $utf16_text, $MSB_first )
                         // This should not happen - it means this is a lone low surrogate
                         // Dont add it to the output
                 }
-                
+
         }
 
         // Return the result
@@ -423,13 +433,13 @@ function UTF8_to_unicode_array( $utf8_text )
                 if ( $bytes !== 0 )
                 {
                         // The byte was valid
-                        
+
                         // Check if there is enough data left in the UTF-8 string to allow the
                         // retrieval of the remainder of this unicode character
                         if ( $pos + $bytes - 1 < strlen( $utf8_text ) )
                         {
                                 // The UTF-8 string is long enough
-                                
+
                                 // Cycle through the number of bytes required,
                                 // minus the first one which has already been done
                                 while ( $bytes > 1 )
@@ -591,7 +601,7 @@ function UTF16_to_unicode_array( $utf16_text, $MSB_first )
         // Return the result
         return $output;
 
-        
+
 }
 
 /******************************************************************************
@@ -630,7 +640,7 @@ function unicode_array_to_UTF8( $unicode_array )
                 if ( ( $unicode_char >= 0x00 ) && ( $unicode_char <= 0x7F ) )
                 {
                         // 1 Byte UTF-8 Unicode (7-Bit ASCII) Character
-                        
+
                         $output .= chr($unicode_char);          // Output is equal to input for 7-bit ASCII
                 }
                 else if ( ( $unicode_char >= 0x80 ) && ( $unicode_char <= 0x7FF ) )
@@ -684,7 +694,7 @@ function unicode_array_to_UTF8( $unicode_array )
                 }
 
         }
-        
+
         // Return resulting UTF-8 String
         return $output;
 }
@@ -742,7 +752,7 @@ function unicode_array_to_UTF16( $unicode_array, $MSB_first )
                                 // Little Endian
                                 $output .= chr( $unicode_char % 0x100 ) . chr( $unicode_char / 0x100 ) ;
                         }
-                        
+
                 }
                 else if ( ( $unicode_char >= 0x10000 ) && ( $unicode_char <= 0x10FFFF ) )
                 {
@@ -772,7 +782,7 @@ function unicode_array_to_UTF16( $unicode_array, $MSB_first )
                         // Unicode value should never be between 0xD800 and 0xDFFF
                         // Do not output this point - there is no way to encode it in UTF-16
                 }
-                
+
         }
 
         // Return resulting UTF-16 String
@@ -823,7 +833,7 @@ function xml_UTF8_clean( $UTF8_text )
 
         // Create a new array to receive the valid unicode character numbers
         $new_unicode_array = array( );
-        
+
         // Cycle through the unicode character numbers
         foreach( $unicode_array as  $unichar )
         {
@@ -850,7 +860,7 @@ function xml_UTF8_clean( $UTF8_text )
         // Escape CR, LF and TAB characters, so that they are kept and not treated as expendable white space
         $trans = array( "\x09" => "&#x09;", "\x0A" => "&#x0A;", "\x0D" => "&#x0D;" );
         $UTF8_text = strtr( $UTF8_text, $trans );
-        
+
         // Return the resulting XML valid string
         return $UTF8_text;
 }
@@ -971,15 +981,16 @@ function HTML_UTF8_Escape( $UTF8_text )
         // Ensure that the Unicode UTF8 encoding is valid.
         $UTF8_text = UTF8_fix( $UTF8_text );
 
+        // Change: changed to use smart_htmlspecialchars, so that characters which were already escaped would remain intact, as of revision 1.10
         // Escape any special HTML characters present
-        $UTF8_text =  htmlspecialchars( $UTF8_text, ENT_QUOTES );
+        $UTF8_text =  smart_htmlspecialchars( $UTF8_text, ENT_QUOTES );
 
         // Convert the UTF-8 string to an array of unicode character numbers
         $unicode_array = UTF8_to_unicode_array( $UTF8_text );
 
         // Create a string to receive the escaped HTML
         $htmloutput = "";
-        
+
         // Cycle through the unicode character numbers
         foreach( $unicode_array as  $unichar )
         {
@@ -995,13 +1006,51 @@ function HTML_UTF8_Escape( $UTF8_text )
                         $htmloutput .= "&#x" . dechex($unichar) . ";";
                 }
         }
-        
+
         // Return the resulting escaped HTML
         return $htmloutput;
 }
 
 /******************************************************************************
 * End of Function:     HTML_UTF8_Escape
+******************************************************************************/
+
+
+
+/******************************************************************************
+*
+* Function:     HTML_UTF8_UnEscape
+*
+* Description:  Converts HTML which contains escaped decimal or hex characters
+*               into UTF-8 text
+*
+* Parameters:   HTML_text - a string containing the HTML text to convert
+*
+* Returns:      utfoutput - a string containing the UTF-8 equivalent
+*
+******************************************************************************/
+
+function HTML_UTF8_UnEscape( $HTML_text )
+{
+        preg_match_all( "/\&\#(\d+);/", $HTML_text, $matches);
+        preg_match_all( "/\&\#[x|X]([A|B|C|D|E|F|a|b|c|d|e|f|0-9]+);/", $HTML_text, $hexmatches);
+        foreach( $hexmatches[1] as $index => $match )
+        {
+                $matches[0][] = $hexmatches[0][$index];
+                $matches[1][] = hexdec( $match );
+        }
+
+        for ( $i = 0; $i < count( $matches[ 0 ] ); $i++ )
+        {
+                $trans = array( $matches[0][$i] => unicode_array_to_UTF8( array( $matches[1][$i] ) ) );
+
+                $HTML_text = strtr( $HTML_text , $trans );
+        }
+        return $HTML_text;
+}
+
+/******************************************************************************
+* End of Function:     HTML_UTF8_UnEscape
 ******************************************************************************/
 
 
@@ -1036,8 +1085,9 @@ function HTML_UTF16_Escape( $UTF16_text, $MSB_first )
         // Ensure that the Unicode UTF16 encoding is valid.
         $UTF16_text = UTF16_fix( $UTF16_text, $MSB_first );
 
+        // Change: changed to use smart_htmlspecialchars, so that characters which were already escaped would remain intact, as of revision 1.10
         // Escape any special HTML characters present
-        $UTF16_text =  htmlspecialchars( $UTF16_text, ENT_QUOTES );
+        $UTF16_text =  smart_htmlspecialchars( $UTF16_text );
 
         // Convert the UTF-16 string to an array of unicode character numbers
         $unicode_array = UTF16_to_unicode_array( $UTF16_text, $MSB_first );
@@ -1070,7 +1120,108 @@ function HTML_UTF16_Escape( $UTF16_text, $MSB_first )
 ******************************************************************************/
 
 
+/******************************************************************************
+*
+* Function:     HTML_UTF16_UnEscape
+*
+* Description:  Converts HTML which contains escaped decimal or hex characters
+*               into UTF-16 text
+*
+* Parameters:   HTML_text - a string containing the HTML text to be converted
+*               MSB_first - True will cause processing as Big Endian UTF-16 (Motorola, MSB first)
+*                           False will cause processing as Little Endian UTF-16 (Intel, LSB first)
+*
+* Returns:      utfoutput - a string containing the UTF-16 equivalent
+*
+******************************************************************************/
 
+function HTML_UTF16_UnEscape( $HTML_text, $MSB_first )
+{
+        $utf8_text = HTML_UTF8_UnEscape( $HTML_text );
+
+        return unicode_array_to_UTF16( UTF8_to_unicode_array( $utf8_text ), $MSB_first );
+}
+
+/******************************************************************************
+* End of Function:     HTML_UTF16_UnEscape
+******************************************************************************/
+
+
+
+
+/******************************************************************************
+*
+* Function:     smart_HTML_Entities
+*
+* Description:  Performs the same function as HTML_Entities, but leaves entities
+*               that are already escaped intact.
+*
+* Parameters:   HTML_text - a string containing the HTML text to be escaped
+*
+* Returns:      HTML_text_out - a string containing the escaped HTML text
+*
+******************************************************************************/
+
+function smart_HTML_Entities( $HTML_text )
+{
+        // Get a table containing the HTML entities translations
+        $translation_table = get_html_translation_table( HTML_ENTITIES );
+
+        // Change the ampersand to translate to itself, to avoid getting &amp;
+        $translation_table[ chr(38) ] = '&';
+
+        // Perform replacements
+        // Regular expression says: find an ampersand, check the text after it,
+        // if the text after it is not one of the following, then replace the ampersand
+        // with &amp;
+        // a) any combination of up to 4 letters (upper or lower case) with at least 2 or 3 non whitespace characters, then a semicolon
+        // b) a hash symbol, then between 2 and 7 digits
+        // c) a hash symbol, an 'x' character, then between 2 and 7 digits
+        // d) a hash symbol, an 'X' character, then between 2 and 7 digits
+        return preg_replace( "/&(?![A-Za-z]{0,4}\w{2,3};|#[0-9]{2,7}|#x[0-9]{2,7}|#X[0-9]{2,7};)/","&amp;" , strtr( $HTML_text, $translation_table ) );
+}
+
+/******************************************************************************
+* End of Function:     smart_HTML_Entities
+******************************************************************************/
+
+
+
+/******************************************************************************
+*
+* Function:     smart_htmlspecialchars
+*
+* Description:  Performs the same function as htmlspecialchars, but leaves characters
+*               that are already escaped intact.
+*
+* Parameters:   HTML_text - a string containing the HTML text to be escaped
+*
+* Returns:      HTML_text_out - a string containing the escaped HTML text
+*
+******************************************************************************/
+
+function smart_htmlspecialchars( $HTML_text )
+{
+        // Get a table containing the HTML special characters translations
+        $translation_table=get_html_translation_table (HTML_SPECIALCHARS);
+
+        // Change the ampersand to translate to itself, to avoid getting &amp;
+        $translation_table[ chr(38) ] = '&';
+
+        // Perform replacements
+        // Regular expression says: find an ampersand, check the text after it,
+        // if the text after it is not one of the following, then replace the ampersand
+        // with &amp;
+        // a) any combination of up to 4 letters (upper or lower case) with at least 2 or 3 non whitespace characters, then a semicolon
+        // b) a hash symbol, then between 2 and 7 digits
+        // c) a hash symbol, an 'x' character, then between 2 and 7 digits
+        // d) a hash symbol, an 'X' character, then between 2 and 7 digits
+        return preg_replace( "/&(?![A-Za-z]{0,4}\w{2,3};|#[0-9]{2,7}|#x[0-9]{2,7}|#X[0-9]{2,7};)/","&amp;" , strtr( $HTML_text, $translation_table ) );
+}
+
+/******************************************************************************
+* End of Function:     smart_htmlspecialchars
+******************************************************************************/
 
 
 ?>

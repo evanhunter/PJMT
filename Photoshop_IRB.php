@@ -14,12 +14,22 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.03
+* Revision:     1.10
 *
 * Changes:      1.00 -> 1.02 : changed get_Photoshop_IRB to work with corrupted
 *                              resource names which Photoshop can still read
 *               1.02 -> 1.03 : Fixed put_Photoshop_IRB to output "Photoshop 3.0\x00"
 *                              string with every APP13 segment, not just the first one
+*               1.03 -> 1.10 : changed get_Photoshop_IRB to fix processing of embedded resource names,
+*                              after discovering that Photoshop does not process
+*                              resource names according to the standard :
+*                              "Adobe Photoshop 6.0 File Formats Specification, Version 6.0, Release 2, November 2000"
+*                              This is an update to the change 1.00 -> 1.02, which was not fully correct
+*                              changed put_Photoshop_IRB to fix the writing of embedded resource name,
+*                              to avoid creating blank resources, and to fix a problem
+*                              causing the IRB block to be incorrectly positioned if no APP segments existed.
+*                              changed get_Photoshop_IPTC to initialise the output array correctly.
+*
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -118,33 +128,32 @@ function get_Photoshop_IRB( $jpeg_header_data )
                         // Next comes a Record Name - usually not used, but it should be a null terminated string, padded with 0x00 to be an even length
                         $namestartpos = $pos;
 
-                        // Change: changed to work with corrupted resource name which Photoshop can still read, as of 1.02
-                        // Some Corrupted Files have the resource name in the format <size - 1 byte><data>
-                        // Check for it: (the ones I have seen have a size less than 10 bytes
-                        if ( ( ord ( $joined_IRB{ $namestartpos } ) < 10 ) && ( ord ( $joined_IRB{ $namestartpos } ) > 0 ) )
+                        // Change: Fixed processing of embedded resource names, as of revision 1.10
+
+                        // NOTE: Photoshop does not process resource names according to the standard :
+                        // "Adobe Photoshop 6.0 File Formats Specification, Version 6.0, Release 2, November 2000"
+                        //
+                        // The resource name is actually formatted as follows:
+                        // One byte name length, followed by the null terminated ascii name string.
+                        // The field is then padded with a Null character if required, to ensure that the
+                        // total length of the name length and name is even.
+
+                        // Name - process it
+                        // Get the length
+                        $namelen = ord ( $joined_IRB{ $namestartpos } );
+
+                        // Total length of name and length info must be even, hence name length must be odd
+                        // Check if the name length is even,
+                        if ( $namelen % 2 == 0 )
                         {
-                                // Corrupt name - process it
-                                // Get the length
-                                $namelen = ord ( $joined_IRB{ $namestartpos } );
-
-                                // Extract the name
-                                $resembeddedname = trim( substr ( $joined_IRB, $namestartpos+1,  $namelen) );
-                                $pos += $namelen + 1;
+                                // add one to length to make it odd
+                                $namelen ++;
                         }
-                        else
-                        {
+                        // Extract the name
+                        $resembeddedname = trim( substr ( $joined_IRB, $namestartpos+1,  $namelen) );
+                        $pos += $namelen + 1;
 
-                                // Normal Name - Process it
-                                // cycle through in steps of two characters until one of them is a 0x00
-                                do
-                                {
-                                        $pos +=2;
-                                } while( ( $joined_IRB{ $pos -2 } != "\x00" ) && ( $joined_IRB{ $pos -1 } != "\x00" ) );
 
-                                // Extract the record Name
-                                $resembeddedname = trim( substr ( $joined_IRB, $namestartpos, $pos - $namestartpos ) );
-                        }
-                        
                         // Next is a four byte size field indicating the size in bytes of the record's data  - MSB first
                         $datasize =     ord( $joined_IRB{ $pos } ) * 16777216 + ord( $joined_IRB{ $pos + 1 } ) * 65536 +
                                         ord( $joined_IRB{ $pos + 2 } ) * 256 + ord( $joined_IRB{ $pos + 3 } );
@@ -263,19 +272,44 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
 
         // Now we have deleted the pre-existing blocks
 
+        $packed_IRB_data = "";
 
-        
         // Cycle through each resource in the new IRB,
         foreach ($new_IRB_data as $resource)
         {
+
+                // Change: Fix to avoid creating blank resources, as of revision 1.10
+
+                // Check if there is actually any data for this resource
+                if( strlen( $resource['ResData'] ) == 0 )
+                {
+                        // No data for resource - skip it
+                        continue;
+                }
+
                 // Append the 8BIM tag, and resource ID to the packed output data
                 $packed_IRB_data .= pack("a4n", "8BIM", $resource['ResID'] );
 
+
+                // Change: Fixed processing of embedded resource names, as of revision 1.10
+
+                // NOTE: Photoshop does not process resource names according to the standard :
+                // "Adobe Photoshop 6.0 File Formats Specification, Version 6.0, Release 2, November 2000"
+                //
+                // The resource name is actually formatted as follows:
+                // One byte name length, followed by the null terminated ascii name string.
+                // The field is then padded with a Null character if required, to ensure that the
+                // total length of the name length and name is even.
+
+                // Append Name Size
+                $packed_IRB_data .= pack( "c", strlen(trim($resource['ResEmbeddedName'])));
+
                 // Append the Resource Name to the packed output data
-                $packed_IRB_data .= trim($resource['ResEmbeddedName']) . "\x00";
-                
-                // If the resource name is odd length,
-                if ( strlen( trim($resource['ResEmbeddedName']) . "\x00" ) % 2 == 1 )
+                $packed_IRB_data .= trim($resource['ResEmbeddedName']);
+
+                // If the resource name is even length, then with the addition of
+                // the size it becomes odd and needs to be padded to an even number
+                if ( strlen( trim($resource['ResEmbeddedName']) ) % 2 == 0 )
                 {
                         // then it needs to be evened up by appending another null
                         $packed_IRB_data .= "\x00";
@@ -286,7 +320,7 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
 
                 // Append the resource data to the packed output data
                 $packed_IRB_data .= $resource['ResData'];
-                
+
                 // If the resource data is odd length,
                 if ( strlen( $resource['ResData'] ) % 2 == 1 )
                 {
@@ -296,12 +330,17 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
         }
 
 
+        // Change : This section changed to fix incorrect positioning of IRB segment, as of revision 1.10
+        //          when there are no APP segments present
+
         //Cycle through the header segments in reverse order (to find where to put the APP13 block - after any APP0 to APP12 blocks)
         $i = count( $jpeg_header_data ) - 1;
-        while (( $i >= 0 ) && ( ( $jpeg_header_data[$i]['SegType'] > 0xED ) || ( $jpeg_header_data[$i]['SegType'] <= 0xE0 ) ) )
+        while (( $i >= 0 ) && ( ( $jpeg_header_data[$i]['SegType'] > 0xED ) || ( $jpeg_header_data[$i]['SegType'] < 0xE0 ) ) )
         {
                 $i--;
         }
+
+
 
         // Cycle through the packed output data until it's size is less than 32000 bytes, outputting each 32000 byte block to an APP13 segment
         while ( strlen( $packed_IRB_data ) > 32000 )
@@ -309,7 +348,7 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
                 // Change: Fixed put_Photoshop_IRB to output "Photoshop 3.0\x00" string with every APP13 segment, not just the first one, as of 1.03
 
                 // Write a 32000 byte APP13 segment
-                array_splice($jpeg_header_data, $i , 0, array(  "SegType" => 0xED,
+                array_splice($jpeg_header_data, $i +1  , 0, array(  "SegType" => 0xED,
                                                                 "SegName" => "APP13",
                                                                 "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xED ],
                                                                 "SegData" => "Photoshop 3.0\x00" . substr( $packed_IRB_data,0,32000) ) );
@@ -320,8 +359,8 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
         }
 
         // Write the last block of packed output data to an APP13 segment - Note array_splice doesn't work with multidimensional arrays, hence inserting a blank string
-        array_splice($jpeg_header_data, $i , 0, "" );
-        $jpeg_header_data[$i] =  array( "SegType" => 0xED,
+        array_splice($jpeg_header_data, $i + 1 , 0, "" );
+        $jpeg_header_data[$i + 1] =  array( "SegType" => 0xED,
                                         "SegName" => "APP13",
                                         "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xED ],
                                         "SegData" => "Photoshop 3.0\x00" . $packed_IRB_data );
@@ -354,6 +393,9 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
 
 function get_Photoshop_IPTC( $Photoshop_IRB_data )
 {
+
+        // Change: Initialise array correctly, as of revision 1.10
+        $IPTC_Data_Out = array();
 
         //Cycle through the Photoshop 8BIM records looking for the IPTC-NAA record
         for( $i = 0; $i < count( $Photoshop_IRB_data ); $i++ )
@@ -493,7 +535,7 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
 
                 // Create another string to receive secondary HTML to be appended at the end
                 $secondary_output_str = "";
-                
+
                 // Add the Heading to the HTML
                 $output_str .= "<h2 class=\"Photoshop_Main_Heading\">Contains Photoshop Information Resource Block (IRB)</h2>";
 
@@ -515,19 +557,19 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                                 // Unknown Resource - Make appropriate name
                                 $Resource_Name = "Unknown Resource (". $IRB_Resource['ResID'] .")";
                         }
-                        
+
                         // Add HTML for the resource as appropriate
                         switch ( $IRB_Resource['ResID'] )
                         {
-                        
+
                                 case 0x0404 : // IPTC-NAA IIM Record
                                         $secondary_output_str .= Interpret_IPTC_to_HTML( get_IPTC( $IRB_Resource['ResData'] ) );
                                         break;
-                                        
+
                                 case 0x040B : // URL
                                         $output_str .= "<tr class=\"Photoshop_Table_Row\"><td class=\"Photoshop_Caption_Cell\">$Resource_Name</td><td class=\"Photoshop_Value_Cell\"><a href=\"" . $IRB_Resource['ResData'] . "\">" . htmlentities( $IRB_Resource['ResData'] ) ."</a></td></tr>\n";
                                         break;
-                                        
+
                                 case 0x040A : // Copyright Marked
                                         if ( hexdec( bin2hex( $IRB_Resource['ResData'] ) ) == 1 )
                                         {
@@ -570,7 +612,7 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                                                 $output_str .= "<tr class=\"Photoshop_Table_Row\"><td class=\"Photoshop_Caption_Cell\">$Resource_Name</td><td class=\"Photoshop_Value_Cell\"><pre>Unknown value (0x" .bin2hex( $IRB_Resource['ResData'] ). ")</pre></td></tr>\n";
                                         }
                                         break;
-                                        
+
                                 case 0x041A : // Slices
                                         $output_str .= "<tr class=\"Photoshop_Table_Row\"><td class=\"Photoshop_Caption_Cell\">$Resource_Name</td><td class=\"Photoshop_Value_Cell\">";
 
@@ -614,7 +656,7 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                                                 // Extract a Unicode String
                                                 $output_str .= "URL = <a href='" . substr( $IRB_Resource['ResData'], $Slicepos, $SliceB['URLlen']*2) . "'>" . HTML_UTF16_Escape( substr( $IRB_Resource['ResData'], $Slicepos, $SliceB['URLlen']*2), TRUE ) . "</a><br>\n";
                                                 $Slicepos += $SliceB['URLlen'] * 2;
-                                                
+
                                                 // Unpack the length of a Unicode String
                                                 $Targetlen = hexdec( bin2hex( substr( $IRB_Resource['ResData'], $Slicepos, 4 ) ) );
                                                 $Slicepos += 4;
@@ -646,7 +688,7 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                                                         $output_str .= "Cell Text is NOT HTML<br>\n";
                                                 }
                                                 $Slicepos++;
-                                                
+
                                                 // Unpack the length of a Unicode String
                                                 $CellTextlen = hexdec( bin2hex( substr( $IRB_Resource['ResData'], $Slicepos, 4 ) ) );
                                                 $Slicepos += 4;
@@ -666,10 +708,10 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                                         }
 
                                         $output_str .= "</td></tr>\n";
-                                        
+
                                         break;
-                                        
-                                        
+
+
                                 case 0x0408 : // Grid and Guides information
                                         $output_str .= "<tr class=\"Photoshop_Table_Row\"><td class=\"Photoshop_Caption_Cell\">$Resource_Name</td><td class=\"Photoshop_Value_Cell\">";
 
@@ -778,7 +820,7 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                                         }
                                         $output_str .= "</td></tr>\n";
                                         break;
-                                        
+
                                 case 0x0409 : // Thumbnail Resource
                                 case 0x040C : // Thumbnail Resource
                                         $thumb_data = unpack("NFormat/NWidth/NHeight/NWidthBytes/NSize/NCompressedSize/nBitsPixel/nPlanes", $IRB_Resource['ResData'] );
@@ -978,7 +1020,7 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                                         {
                                                 $output_str .= "Display units for Image Width = Unknown Value (". $ResInfo['widthUnit'] .")\n";
                                         }
-                                        
+
                                         if ( $ResInfo['heightUnit'] == 1 )
                                         {
                                                 $output_str .= "Display units for Image Height = Inches";
@@ -1012,7 +1054,7 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                         }
 
                 }
-                
+
                 // Add the table end to the HTML
                 $output_str .= "</table>\n";
 
@@ -1020,7 +1062,7 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                 $output_str .= $secondary_output_str;
 
         }
-        
+
         // Return the HTML
         return $output_str;
 }
@@ -1083,7 +1125,7 @@ function Interpret_Transfer_Function( $Transfer_Function_Binary )
                         $output_str .= $val/10 . "%, ";
                 }
         }
-        
+
         // Output the override info
         if ( $Trans_vals['Override'] == 0 )
         {
@@ -1093,7 +1135,7 @@ function Interpret_Transfer_Function( $Transfer_Function_Binary )
         {
                 $output_str .= "\nOverride: Override printer’s default transfer curve";
         }
-        
+
         // Return the result
         return $output_str;
 }
@@ -1177,7 +1219,7 @@ function Interpret_Halftone( $Halftone_Binary )
         {
                 $output_str .= "Shape of Halftone Dots = Unknown shape (" . $HalftoneInfo['ShapeCode'] . ")\n";
         }
-        
+
         // Interpret Accurate Screens
         if ( $HalftoneInfo['Accurate'] == 1 )
         {
@@ -1187,7 +1229,7 @@ function Interpret_Halftone( $Halftone_Binary )
         {
                 $output_str .= "Use Other (not Accurate) Screens Selected\n";
         }
-        
+
         // Interpret Printer Default Screens
         if ( $HalftoneInfo['Default'] == 1 )
         {
@@ -1197,10 +1239,10 @@ function Interpret_Halftone( $Halftone_Binary )
         {
                 $output_str .= "Use Other (not Printer Default) Screens Selected\n";
         }
-        
+
         // Return Text
         return $output_str;
-        
+
 }
 
 /******************************************************************************
