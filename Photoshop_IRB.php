@@ -14,10 +14,12 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.02
+* Revision:     1.03
 *
 * Changes:      1.00 -> 1.02 : changed get_Photoshop_IRB to work with corrupted
 *                              resource names which Photoshop can still read
+*               1.02 -> 1.03 : Fixed put_Photoshop_IRB to output "Photoshop 3.0\x00"
+*                              string with every APP13 segment, not just the first one
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -54,6 +56,7 @@ include_once 'Unicode.php';
 // TODO: Many Photoshop IRB resources not interpeted
 // TODO: Obtain a copy of the Photoshop CS File Format Specification
 // TODO: Find out what Photoshop IRB resources 1061, 1062 & 1064 are
+// TODO: Test get_Photoshop_IRB and put_Photoshop_IRB with multiple APP13 segments
 
 /******************************************************************************
 *
@@ -260,7 +263,7 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
 
         // Now we have deleted the pre-existing blocks
 
-        $packed_IRB_data = "Photoshop 3.0\x00";
+
         
         // Cycle through each resource in the new IRB,
         foreach ($new_IRB_data as $resource)
@@ -303,11 +306,13 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
         // Cycle through the packed output data until it's size is less than 32000 bytes, outputting each 32000 byte block to an APP13 segment
         while ( strlen( $packed_IRB_data ) > 32000 )
         {
+                // Change: Fixed put_Photoshop_IRB to output "Photoshop 3.0\x00" string with every APP13 segment, not just the first one, as of 1.03
+
                 // Write a 32000 byte APP13 segment
-                array_splice($jpeg_header_data, $i , 0, array(        "SegType" => 0xED,
-                                                        "SegName" => "APP13",
-                                                        "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xED ],
-                                                        "SegData" => substr( $packed_IRB_data,0,32000) ) );
+                array_splice($jpeg_header_data, $i , 0, array(  "SegType" => 0xED,
+                                                                "SegName" => "APP13",
+                                                                "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xED ],
+                                                                "SegData" => "Photoshop 3.0\x00" . substr( $packed_IRB_data,0,32000) ) );
 
                 // Delete the 32000 bytes from the packed output data, that were just output
                 $packed_IRB_data = substr_replace($packed_IRB_data, '', 0, 32000);
@@ -319,7 +324,7 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
         $jpeg_header_data[$i] =  array( "SegType" => 0xED,
                                         "SegName" => "APP13",
                                         "SegDesc" => $GLOBALS[ "JPEG_Segment_Descriptions" ][ 0xED ],
-                                        "SegData" => $packed_IRB_data );
+                                        "SegData" => "Photoshop 3.0\x00" . $packed_IRB_data );
 
         return $jpeg_header_data;
 }
