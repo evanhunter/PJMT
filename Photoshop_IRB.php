@@ -14,7 +14,10 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.00
+* Revision:     1.02
+*
+* Changes:      1.00 -> 1.02 : changed get_Photoshop_IRB to work with corrupted
+*                              resource names which Photoshop can still read
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -109,17 +112,36 @@ function get_Photoshop_IRB( $jpeg_header_data )
                         // Skip the positionover the two record ID characters
                         $pos += 2;
 
-                        // Next comes a Record Name - usually not used, but it is a null terminated string, padded with 0x00 to be an even length
+                        // Next comes a Record Name - usually not used, but it should be a null terminated string, padded with 0x00 to be an even length
                         $namestartpos = $pos;
-                        // cycle through in steps of two characters until one of them is a 0x00
-                        do
+
+                        // Change: changed to work with corrupted resource name which Photoshop can still read, as of 1.02
+                        // Some Corrupted Files have the resource name in the format <size - 1 byte><data>
+                        // Check for it: (the ones I have seen have a size less than 10 bytes
+                        if ( ( ord ( $joined_IRB{ $namestartpos } ) < 10 ) && ( ord ( $joined_IRB{ $namestartpos } ) > 0 ) )
                         {
-                                $pos +=2;
-                        } while( ( $joined_IRB{ $pos -2 } != "\x00" ) && ( $joined_IRB{ $pos -1 } != "\x00" ) );
+                                // Corrupt name - process it
+                                // Get the length
+                                $namelen = ord ( $joined_IRB{ $namestartpos } );
 
-                        // Extract the record Name
-                        $resembeddedname = trim( substr ( $joined_IRB, $namestartpos, $pos - $namestartpos ) );
+                                // Extract the name
+                                $resembeddedname = trim( substr ( $joined_IRB, $namestartpos+1,  $namelen) );
+                                $pos += $namelen + 1;
+                        }
+                        else
+                        {
 
+                                // Normal Name - Process it
+                                // cycle through in steps of two characters until one of them is a 0x00
+                                do
+                                {
+                                        $pos +=2;
+                                } while( ( $joined_IRB{ $pos -2 } != "\x00" ) && ( $joined_IRB{ $pos -1 } != "\x00" ) );
+
+                                // Extract the record Name
+                                $resembeddedname = trim( substr ( $joined_IRB, $namestartpos, $pos - $namestartpos ) );
+                        }
+                        
                         // Next is a four byte size field indicating the size in bytes of the record's data  - MSB first
                         $datasize =     ord( $joined_IRB{ $pos } ) * 16777216 + ord( $joined_IRB{ $pos + 1 } ) * 65536 +
                                         ord( $joined_IRB{ $pos + 2 } ) * 256 + ord( $joined_IRB{ $pos + 3 } );
