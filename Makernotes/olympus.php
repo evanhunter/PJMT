@@ -24,7 +24,10 @@
 *
 * Project:      JPEG Metadata
 *
-* Revision:     1.00
+* Revision:     1.11
+*
+* Changes:      1.00 -> 1.11 : changed get_Olympus_Makernote_Html to allow thumbnail links to work when
+*                              toolkit is portable across directories
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -45,7 +48,7 @@ $GLOBALS['Makernote_Function_Array']['Interpret_Makernote_to_HTML'][] = "get_Oly
 
 
 
-
+include_once dirname(__FILE__) .'/../pjmt_utils.php';          // Change: as of version 1.11 - added to allow directory portability
 
 
 
@@ -96,7 +99,7 @@ function get_Olympus_Makernote( $Makernote_Tag, $EXIF_Array, $filehnd, $Make_Fie
         }
 
 
-        
+
         // Seek to the start of the IFD
         fseek($filehnd, $Makernote_Tag['Tiff Offset'] + $Makernote_Tag['Offset'] + 8 );
 
@@ -151,8 +154,8 @@ function get_Olympus_Text_Value( $Exif_Tag, $Tag_Definitions_Name )
                 // Not an Olympus tag - can't decode it
                 return FALSE;
         }
-        
-        
+
+
         // Process the tag acording to it's tag number, to produce a text value
         if ( $Exif_Tag['Tag Number'] == 0x200 )
         {
@@ -170,10 +173,10 @@ function get_Olympus_Text_Value( $Exif_Tag, $Tag_Definitions_Name )
                         default: $outputstr = "Unknown Mode ( " . $Exif_Tag['Data'][0] . " )\n";
                                         break;
                 }
-                        
+
                 // Add info from the second value to the output string
                 $outputstr .= "Sequence Number: " . $Exif_Tag['Data'][1] . "\n";
-                        
+
                 // Add info from the third value to the output string
                 switch ( $Exif_Tag['Data'][2] )
                 {
@@ -190,7 +193,7 @@ function get_Olympus_Text_Value( $Exif_Tag, $Tag_Definitions_Name )
                         default: $outputstr .= "Unknown Panorama Direction\n";
                                         break;
                 }
-                
+
                 // Return the output string
                 return $outputstr;
         }
@@ -247,19 +250,34 @@ function get_Olympus_Makernote_Html( $Makernote_tag, $filename )
                 // Decoded data is not valid - can't interpret with this function
                 return FALSE;
         }
-        
+
         // Minolta Thumbnail 1
         if ( ( array_key_exists( 0x0088, $Makernote_tag['Decoded Data'][0] ) ) &&
              ( $Makernote_tag['Makernote Tags'] == "Olympus" ) )
         {
-                $Makernote_tag['Decoded Data'][0][0x0088]['Text Value'] = "<a class=\"EXIF_Minolta_Thumb_Link\" href=\"get_minolta_thumb.php?filename=$filename\" ><img class=\"EXIF_Minolta_Thumb\" src=\"get_minolta_thumb.php?filename=$filename\"></a>";
+                // Change: as of version 1.11 - Changed to make thumbnail link portable across directories
+                // Build the path of the thumbnail script and its filename parameter to put in a url
+                $link_str = get_relative_path( dirname(__FILE__)  . "/../get_minolta_thumb.php" , getcwd ( ) );
+                $link_str .= "?filename=";
+                $link_str .= get_relative_path( $filename, dirname(__FILE__) ."/.." );
+
+                // Add thumbnail link to html
+                $Makernote_tag['Decoded Data'][0][0x0088]['Text Value'] = "<a class=\"EXIF_Minolta_Thumb_Link\" href=\"$link_str\" ><img class=\"EXIF_Minolta_Thumb\" src=\"$link_str\"></a>";
+
                 $Makernote_tag['Decoded Data'][0][0x0088]['Type'] = "String";
         }
         // Minolta Thumbnail 2
         if ( ( array_key_exists( 0x0081, $Makernote_tag['Decoded Data'][0] ) ) &&
              ( $Makernote_tag['Makernote Tags'] == "Olympus" ) )
         {
-                $Makernote_tag['Decoded Data'][0][0x0081]['Text Value'] = "<a class=\"EXIF_Minolta_Thumb_Link\" href=\"get_minolta_thumb.php?filename=$filename\" ><img class=\"EXIF_Minolta_Thumb\" src=\"get_minolta_thumb.php?filename=$filename\"></a>";
+                // Change: as of version 1.11 - Changed to make thumbnail link portable across directories
+                // Build the path of the thumbnail script and its filename parameter to put in a url
+                $link_str = get_relative_path( dirname(__FILE__) . " /../get_minolta_thumb.php" , getcwd ( ) );
+                $link_str .= "?filename=";
+                $link_str .= get_relative_path( $filename, dirname(__FILE__) ."/.." );
+
+                // Add thumbnail link to html
+                $Makernote_tag['Decoded Data'][0][0x0081]['Text Value'] = "<a class=\"EXIF_Minolta_Thumb_Link\" href=\"$link_str\" ><img class=\"EXIF_Minolta_Thumb\" src=\"$link_str\"></a>";
                 $Makernote_tag['Decoded Data'][0][0x0081]['Type'] = "String";
         }
 

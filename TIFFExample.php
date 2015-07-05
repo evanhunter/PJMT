@@ -13,7 +13,9 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.10
+* Revision:     1.11
+*
+* Changes:      1.10 -> 1.11 : Changed displayed toolkit version numbers to reference Toolkit_Version.php
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -67,6 +69,7 @@
                         // Hide any unknown EXIF tags
                         $GLOBALS['HIDE_UNKNOWN_TAGS'] = TRUE;
 
+                        include 'Toolkit_Version.php';
                         include 'EXIF.php';
 
                         // Retrieve the TIFF image filename from the http url request
@@ -77,7 +80,7 @@
                                 echo "</head>\n";
                                 echo "<body>\n";
                                 echo "<p>No image filename defined - use GET method with field: tiff_fname</p>\n";
-                                echo "<p><a href=\"http://www.ozhiker.com/electronics/pjmt/\" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>\n";
+                                echo "<p><a href=\"http://www.ozhiker.com/electronics/pjmt/\" >PHP JPEG Metadata Toolkit version " . $GLOBALS['Toolkit_Version'] . ", Copyright (C) 2004 Evan Hunter</a></p>\n";         // Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11
                                 echo "</body>\n";
                                 exit( );
                         }
@@ -98,20 +101,20 @@
 
         <body>
 
-                <p >Interpreted using: <a href="/electronics/pjmt/">PHP JPEG Metadata Toolkit version 1.10, Copyright (C) 2004 Evan Hunter</a></p>
+                <p >Interpreted using: <a href="http://www.ozhiker.com/electronics/pjmt/">PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>                <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
                 <br>
 
                 <h2><B><U>Metadata for &quot;<?php echo $filename; ?>&quot;</U></B></h2>
 
 
                 <!-- Output the EXIF Information -->
-                <?php   echo Interpret_EXIF_to_HTML( get_EXIF_TIFF( $filename ), $filename );  ?>
+                <?php echo Interpret_EXIF_to_HTML( get_EXIF_TIFF( $filename ), $filename );  ?>
 
                 <BR>
                 <BR>
                 <BR>
                 <p>Interpreted using:</p>
-                <p><a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version 1.10, Copyright (C) 2004 Evan Hunter</a></p>
+                <p><a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>              <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
 
         </body>
 

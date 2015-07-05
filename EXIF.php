@@ -25,9 +25,14 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.10
+* Revision:     1.11
 *
 * Changes:      1.00 -> 1.10 : added function get_EXIF_TIFF to allow extracting EXIF from a TIFF file
+*               1.10 -> 1.11 : added functionality to allow decoding of XMP and Photoshop IRB information
+*                              embedded within the EXIF data
+*                              added checks for http and ftp wrappers, as these are not supported
+*                              changed interpret_IFD to allow thumbnail links to work when
+*                              toolkit is portable across directories
 *
 *
 * URL:          http://electronics.ozhiker.com
@@ -85,7 +90,9 @@ include_once 'PIM.php';
 include_once 'Unicode.php';
 include_once 'JPEG.php';
 include_once 'IPTC.php';
-
+include_once 'Photoshop_IRB.php';       // Change: as of version 1.11  - Required for TIFF with embedded IRB
+include_once 'XMP.php';                 // Change: as of version 1.11  - Required for TIFF with embedded XMP
+include_once 'pjmt_utils.php';          // Change: as of version 1.11  - Required for directory portability
 
 
 
@@ -110,6 +117,17 @@ include_once 'IPTC.php';
 
 function get_EXIF_JPEG( $filename )
 {
+        // Change: Added as of version 1.11
+        // Check if a wrapper is being used - these are not currently supported (see notes at top of file)
+        if ( ( stristr ( $filename, "http://" ) != FALSE ) || ( stristr ( $filename, "ftp://" ) != FALSE ) )
+        {
+                // A HTTP or FTP wrapper is being used - show a warning and abort
+                echo "HTTP and FTP wrappers are currently not supported with EXIF - See EXIF functionality documentation - a local file must be specified<br>";
+                echo "To work on an internet file, copy it locally to start with:<br><br>\n";
+                echo "\$newfilename = tempnam ( \$dir, \"tmpexif\" );<br>\n";
+                echo "copy ( \"http://whatever.com\", \$newfilename );<br><br>\n";
+                return FALSE;
+        }
 
         // get the JPEG headers
         $jpeg_header_data = get_jpeg_header_data( $filename );
@@ -277,6 +295,17 @@ function put_EXIF_JPEG( $exif_data, $jpeg_header_data )
 
 function get_Meta_JPEG( $filename )
 {
+        // Change: Added as of version 1.11
+        // Check if a wrapper is being used - these are not currently supported (see notes at top of file)
+        if ( ( stristr ( $filename, "http://" ) != FALSE ) || ( stristr ( $filename, "ftp://" ) != FALSE ) )
+        {
+                // A HTTP or FTP wrapper is being used - show a warning and abort
+                echo "HTTP and FTP wrappers are currently not supported with Meta - See EXIF/Meta functionality documentation - a local file must be specified<br>";
+                echo "To work on an internet file, copy it locally to start with:<br><br>\n";
+                echo "\$newfilename = tempnam ( \$dir, \"tmpmeta\" );<br>\n";
+                echo "copy ( \"http://whatever.com\", \$newfilename );<br><br>\n";
+                return FALSE;
+        }
 
         // get the JPEG headers
         $jpeg_header_data = get_jpeg_header_data( $filename );
@@ -442,6 +471,18 @@ function put_Meta_JPEG( $meta_data, $jpeg_header_data )
 
 function get_EXIF_TIFF( $filename )
 {
+        // Change: Added as of version 1.11
+        // Check if a wrapper is being used - these are not currently supported (see notes at top of file)
+        if ( ( stristr ( $filename, "http://" ) != FALSE ) || ( stristr ( $filename, "ftp://" ) != FALSE ) )
+        {
+                // A HTTP or FTP wrapper is being used - show a warning and abort
+                echo "HTTP and FTP wrappers are currently not supported with TIFF - See EXIF/TIFF functionality documentation - a local file must be specified<br>";
+                echo "To work on an internet file, copy it locally to start with:<br><br>\n";
+                echo "\$newfilename = tempnam ( \$dir, \"tmptiff\" );<br>\n";
+                echo "copy ( \"http://whatever.com\", \$newfilename );<br><br>\n";
+                return FALSE;
+        }
+
 
         $filehnd = @fopen($filename, 'rb');
 
@@ -781,8 +822,24 @@ function get_IFD_Packed_Data( $ifd_data, $IFD_offset, $Byte_Align, $Another_IFD 
                         else if ( ( ( $Tag_Definitions_Name == "EXIF" ) || ( $Tag_Definitions_Name == "TIFF" ) ) &&
                                   ( $tag[ 'Tag Number' ] == 33723 ) )
                         {
-                                // This is a IPTC/NAA Record, encoded it
+                                // This is a IPTC/NAA Record, encode it
                                 $data = put_IPTC( $tag['Data'] );
+                        }
+                                // Change: Check for embedded XMP as of version 1.11
+                                // Check if this is a XMP Record within the EXIF IFD
+                        else if ( ( ( $Tag_Definitions_Name == "EXIF" ) || ( $Tag_Definitions_Name == "TIFF" ) ) &&
+                                  ( $tag[ 'Tag Number' ] == 700 ) )
+                        {
+                                // This is a XMP Record, encode it
+                                $data = write_XMP_array_to_text( $tag['Data'] );
+                        }
+                                // Change: Check for embedded IRB as of version 1.11
+                                // Check if this is a Photoshop IRB Record within the EXIF IFD
+                        else if ( ( ( $Tag_Definitions_Name == "EXIF" ) || ( $Tag_Definitions_Name == "TIFF" ) ) &&
+                                  ( $tag[ 'Tag Number' ] == 34377 ) )
+                        {
+                                // This is a Photoshop IRB Record, encode it
+                                $data = pack_Photoshop_IRB_Data( $tag['Data'] );
                         }
                                 // Exif Thumbnail Offset
                         else if ( ( $tag[ 'Tag Number' ] == 513 ) && ( $Tag_Definitions_Name == "TIFF" ) )
@@ -1435,7 +1492,25 @@ function read_IFD_universal( $filehnd, $Tiff_offset, $Byte_Align, $Tag_Definitio
                         $OutputArray[ $Tag_No ]['Data'] = get_IPTC( $DataStr );
                         $OutputArray[ $Tag_No ]['Decoded'] = TRUE;
                 }
+                // Change: Check for embedded XMP as of version 1.11
+                // Check if this is a XMP Record within the EXIF IFD
+                if ( ( ( $Tag_Definitions_Name == "EXIF" ) || ( $Tag_Definitions_Name == "TIFF" ) ) &&
+                     ( $Tag_No == 700 ) )
+                {
+                        // This is a XMP Record, interpret it and put result in the data for this entry
+                        $OutputArray[ $Tag_No ]['Data'] =  read_XMP_array_from_text( $DataStr );
+                        $OutputArray[ $Tag_No ]['Decoded'] = TRUE;
+                }
 
+                // Change: Check for embedded IRB as of version 1.11
+                // Check if this is a Photoshop IRB Record within the EXIF IFD
+                if ( ( ( $Tag_Definitions_Name == "EXIF" ) || ( $Tag_Definitions_Name == "TIFF" ) ) &&
+                     ( $Tag_No == 34377 ) )
+                {
+                        // This is a Photoshop IRB Record, interpret it and put result in the data for this entry
+                        $OutputArray[ $Tag_No ]['Data'] = unpack_Photoshop_IRB_Data( $DataStr );
+                        $OutputArray[ $Tag_No ]['Decoded'] = TRUE;
+                }
 
                 // Exif Thumbnail
                 // Check that both the thumbnail length and offset entries have been processed,
@@ -1987,7 +2062,22 @@ function interpret_IFD( $IFD_array, $filename )
                                 $extra_IFD_str .= "<h3 class=\"EXIF_Secondary_Heading\">Contains IPTC/NAA Embedded in EXIF</h3>";
                                 $extra_IFD_str .=Interpret_IPTC_to_HTML( $Exif_Tag['Data'] );
                         }
-
+                                // Change: Check for embedded XMP as of version 1.11
+                                // Check if this is a XMP Record within the EXIF IFD
+                        else if ( $Exif_Tag['Type'] == "XMP" )
+                        {
+                                // This is a XMP Record, interpret it and output to the secondary html
+                                $extra_IFD_str .= "<h3 class=\"EXIF_Secondary_Heading\">Contains XMP Embedded in EXIF</h3>";
+                                $extra_IFD_str .= Interpret_XMP_to_HTML( $Exif_Tag['Data'] );
+                        }
+                                // Change: Check for embedded IRB as of version 1.11
+                                // Check if this is a Photoshop IRB Record within the EXIF IFD
+                        else if ( $Exif_Tag['Type'] == "IRB" )
+                        {
+                                // This is a Photoshop IRB Record, interpret it and output to the secondary html
+                                $extra_IFD_str .= "<h3 class=\"EXIF_Secondary_Heading\">Contains Photoshop IRB Embedded in EXIF</h3>";
+                                $extra_IFD_str .= Interpret_IRB_to_HTML( $Exif_Tag['Data'], $filename );
+                        }
                                 // Check if the tag is Numeric
                         else if ( $Exif_Tag['Type'] == "Numeric" )
                         {
@@ -2020,7 +2110,15 @@ function interpret_IFD( $IFD_array, $filename )
                              ( $Tag_ID == 513 ) )
                         {
                                 // This is the first IFD thumbnail - Add html to the output
-                                $output_str .= "<tr class=\"EXIF_Table_Row\"><td class=\"EXIF_Caption_Cell\">" . $Exif_Tag['Tag Name'] . "</td><td class=\"EXIF_Value_Cell\"><a class=\"EXIF_First_IFD_Thumb_Link\" href=\"get_exif_thumb.php?filename=$filename\"><img class=\"EXIF_First_IFD_Thumb\" src=\"get_exif_thumb.php?filename=$filename\"></a></td></tr>\n";
+
+                                // Change: as of version 1.11 - Changed to make thumbnail link portable across directories
+                                // Build the path of the thumbnail script and its filename parameter to put in a url
+                                $link_str = get_relative_path( dirname(__FILE__) . "/get_exif_thumb.php" , getcwd ( ) );
+                                $link_str .= "?filename=";
+                                $link_str .= get_relative_path( $filename, dirname(__FILE__) );
+
+                                // Add thumbnail link to html
+                                $output_str .= "<tr class=\"EXIF_Table_Row\"><td class=\"EXIF_Caption_Cell\">" . $Exif_Tag['Tag Name'] . "</td><td class=\"EXIF_Value_Cell\"><a class=\"EXIF_First_IFD_Thumb_Link\" href=\"$link_str\"><img class=\"EXIF_First_IFD_Thumb\" src=\"$link_str\"></a></td></tr>\n";
                         }
                                 // Check if this is the Makernote
                         else if ( $Exif_Tag['Type'] == "Maker Note" )
@@ -2621,14 +2719,6 @@ function get_IFD_value_as_text( $Exif_Tag )
 /******************************************************************************
 * End of Function:     get_IFD_value_as_text
 ******************************************************************************/
-
-
-
-
-
-
-
-
 
 
 

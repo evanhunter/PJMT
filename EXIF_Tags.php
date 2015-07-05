@@ -13,7 +13,12 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.00
+* Revision:     1.11
+*
+* Changes:      1.00 -> 1.11 : Added TIFF compression types ZIP, LZW and JPEG
+*                              Added embedded XMP tag
+*                              Added embedded Photoshop IRB tag
+*                              Fixed GPS tags after testing
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -90,7 +95,10 @@ $GLOBALS[ "IFD_Tag_Definitions" ] = array(
                 'Description' => "Specifies what type of compression is used 1 = uncompressed, 6 = JPEG compression (thumbnails only), Other = reserved",
                 'Type' => "Lookup",
                 1 => "Uncompressed",
-                6 => "Thumbnail compressed with JPEG compression" ),
+                5 => "LZW Compression",
+                6 => "Thumbnail compressed with JPEG compression",
+                7 => "JPEG Compression",
+                8 => "ZIP Compression" ),                                // Change: Added TIFF compression types as of version 1.11
 
 262 => array(   'Name' =>  "Photometric Interpretation",
                 'Description' => "Specifies Pixel Composition - 0 or 1 = monochrome, 2 = RGB, 3 = Palatte Colour, 4 = Transparency Mask, 6 = YCbCr",
@@ -215,9 +223,11 @@ $GLOBALS[ "IFD_Tag_Definitions" ] = array(
 315 => array(   'Name' => "Artist Name",
                 'Type' => "String" ),
 
+700 => array(   'Name' => "Embedded XMP Block",        // Change: Added embedded XMP as of version 1.11
+                'Type' => "XMP" ),
+
 33432 => array( 'Name' => "Copyright Information",
                 'Type' => "String" ),
-
 
 34665 => array( 'Name' => "EXIF Image File Directory (IFD)",
                 'Type' => "SubIFD",
@@ -225,6 +235,13 @@ $GLOBALS[ "IFD_Tag_Definitions" ] = array(
 
 33723 => array( 'Name' => "IPTC Records",
                 'Type' => "IPTC" ),
+
+34377 => array( 'Name' => "Embedded Photoshop IRB",    // Change: Added embedded IRB as of version 1.11
+                'Type' => "IRB" ),
+
+34853 => array( 'Name' => "GPS Info Image File Directory (IFD)",        // Change: Moved GPS IFD tag to correct location as of version 1.11
+                'Type' => "SubIFD",
+                'Tags Name' => "GPS" ),
 
 50341 => array( 'Name' => "Print Image Matching Info",
                 'Type' => "PIM" ),
@@ -249,9 +266,7 @@ $GLOBALS[ "IFD_Tag_Definitions" ] = array(
                 'Type' => "SubIFD",
                 'Tags Name' => "Interoperability" ),
 
-34853 => array( 'Name' => "GPS Info Image File Directory (IFD)",
-                'Type' => "SubIFD",
-                'Tags Name' => "GPS" ),
+// Change: removed GPS IFD tag from here as it was incorrect location - as of version 1.11
 
 40960 => array( 'Name' => "FlashPix Version",
                 'Type' => "String" ),
@@ -623,13 +638,13 @@ $GLOBALS[ "IFD_Tag_Definitions" ] = array(
 
 9 => array(     'Name' => "GPS Receiver Status",
                 'Type' => "Lookup",
-                ord('A') => "Measurement in progress",
-                ord('V') => "Measurement Interoperability" ),
+                'A' => "Measurement in progress",          // Change: Fixed tag values as of version 1.11
+                'V' => "Measurement Interoperability" ),
 
 10 => array(    'Name' => "GPS Measurement Mode",
                 'Type' => "Lookup",
-                ord('2') => "2-dimensional measurement",
-                ord('3') => "3-dimensional measurement" ),
+                2 => "2-dimensional measurement",         // Change: Fixed tag values as of version 1.11
+                3 => "3-dimensional measurement" ),
 
 11 => array(    'Name' => "Measurement Precision",
                 'Type' => "Numeric",
@@ -637,18 +652,18 @@ $GLOBALS[ "IFD_Tag_Definitions" ] = array(
 
 12 => array(    'Name' => "Speed Unit",
                 'Type' => "Lookup",
-                ord('K') => "Kilometers per Hour",
-                ord('M') => "Miles per Hour",
-                ord('N') => "Knots" ),
+                'K' => "Kilometers per Hour",            // Change: Fixed tag values as of version 1.11
+                'M' => "Miles per Hour",
+                'N' => "Knots" ),
 
 13 => array(    'Name' => "Speed of GPS receiver",
                 'Type' => "Numeric",
                 'Units' => "Speed Units" ),
 
 14 => array(    'Name' => "Reference for direction of Movement",
-                'Type' => "Lookup",
-                ord('T') => "True North",
-                ord('M') => "Magnetic North" ),
+                'Type' => "Lookup",                     // Change: Fixed tag values as of version 1.11
+                'T' => "True North",
+                'M' => "Magnetic North" ),
 
 15 => array(    'Name' => "Direction of Movement",
                 'Type' => "Numeric",
@@ -656,8 +671,8 @@ $GLOBALS[ "IFD_Tag_Definitions" ] = array(
 
 16 => array(    'Name' => "Reference for Direction of Image",
                 'Type' => "Lookup",
-                ord('T') => "True North",
-                ord('M') => "Magnetic North" ),
+                'T' => "True North",                    // Change: Fixed tag values as of version 1.11
+                'M' => "Magnetic North" ),
 
 17 => array(    'Name' => "Direction of Image",
                 'Type' => "Numeric",
@@ -682,8 +697,8 @@ $GLOBALS[ "IFD_Tag_Definitions" ] = array(
 
 23 => array(    'Name' => "Reference for Bearing of Destination",
                 'Type' => "Lookup",
-                ord('T') => "True North",
-                ord('M') => "Magnetic North" ),
+                'T' => "True North",                    // Change: Fixed tag values as of version 1.11
+                'M' => "Magnetic North" ),
 
 24 => array(    'Name' => "Bearing of Destination",
                 'Type' => "Numeric",
@@ -691,9 +706,9 @@ $GLOBALS[ "IFD_Tag_Definitions" ] = array(
 
 25 => array(    'Name' => "Units for Distance to Destination",
                 'Type' => "Lookup",
-                ord('K') => "Kilometres",
-                ord('M') => "Miles",
-                ord('N') => "Nautical Miles" ),
+                'K' => "Kilometres",                    // Change: Fixed tag values as of version 1.11
+                'M' => "Miles",
+                'N' => "Nautical Miles" ),
 
 26 => array(    'Name' => "Distance to Destination",
                 'Type' => "Numeric",

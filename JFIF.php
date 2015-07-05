@@ -14,7 +14,10 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.00
+* Revision:     1.11
+*
+* Changes:      1.00 -> 1.11 : changed Interpret_JFXX_to_HTML to allow thumbnail links to work when
+*                              toolkit is portable across directories
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -44,7 +47,7 @@
 *
 ******************************************************************************/
 
-
+include_once 'pjmt_utils.php';          // Change: as of version 1.11 - added to allow directory portability
 
 /******************************************************************************
 *
@@ -397,7 +400,15 @@ function Interpret_JFXX_to_HTML( $JFXX_array, $filename )
                 switch ( $JFXX_array['Extension_Code'] )
                 {
                         case 0x10 :     $output .= "<p class=\"JFXX_Text\">JFXX Thumbnail is JPEG Encoded</p>\n";
-                                        $output .= "<a class=\"JFXX_Thumbnail_Link\" href=\"get_jfxx_thumb.php?filename=$filename\"><img  class=\"JFXX_Thumbnail\" src=\"get_jfxx_thumb.php?filename=$filename\"></a>\n";
+
+                                        // Change: as of version 1.11 - Changed to make thumbnail link portable across directories
+                                        // Build the path of the thumbnail script and its filename parameter to put in a url
+                                        $link_str = get_relative_path( dirname(__FILE__) . "/get_JFXX_thumb.php" , getcwd ( ) );
+                                        $link_str .= "?filename=";
+                                        $link_str .= get_relative_path( $filename, dirname(__FILE__) );
+
+                                        // Add thumbnail link to html
+                                        $output .= "<a class=\"JFXX_Thumbnail_Link\" href=\"$link_str\"><img  class=\"JFXX_Thumbnail\" src=\"$link_str\"></a>\n";
                                         break;
                         case 0x11 :     $output .= "<p class=\"JFXX_Text\">JFXX Thumbnail is Encoded 1 byte/pixel</p>\n";
                                         $output .= "<p class=\"JFXX_Text\">Thumbnail Display Not Implemented Yet</p>\n";

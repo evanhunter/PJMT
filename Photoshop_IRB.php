@@ -14,7 +14,7 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.10
+* Revision:     1.11
 *
 * Changes:      1.00 -> 1.02 : changed get_Photoshop_IRB to work with corrupted
 *                              resource names which Photoshop can still read
@@ -29,6 +29,13 @@
 *                              to avoid creating blank resources, and to fix a problem
 *                              causing the IRB block to be incorrectly positioned if no APP segments existed.
 *                              changed get_Photoshop_IPTC to initialise the output array correctly.
+*               1.10 -> 1.11 : Moved code out of get_Photoshop_IRB into new function unpack_Photoshop_IRB_Data
+*                              to allow reading of IRB blocks embedded within EXIF (for TIFF Files)
+*                              Moved code out of put_Photoshop_IRB into new function pack_Photoshop_IRB_Data
+*                              to allow writing of IRB blocks embedded within EXIF (for TIFF Files)
+*                              Enabled the usage of $GLOBALS['HIDE_UNKNOWN_TAGS'] to hide unknown resources
+*                              changed Interpret_IRB_to_HTML to allow thumbnail links to work when
+*                              toolkit is portable across directories
 *
 *
 * URL:          http://electronics.ozhiker.com
@@ -59,8 +66,12 @@
 *
 ******************************************************************************/
 
+// Change: as of version 1.11 - added to ensure the HIDE_UNKNOWN_TAGS variable is set even if EXIF.php is not included
+if ( !isset( $GLOBALS['HIDE_UNKNOWN_TAGS'] ) )     $GLOBALS['HIDE_UNKNOWN_TAGS']= FALSE;
+
 include_once 'IPTC.php';
 include_once 'Unicode.php';
+
 
 
 // TODO: Many Photoshop IRB resources not interpeted
@@ -110,102 +121,9 @@ function get_Photoshop_IRB( $jpeg_header_data )
         // If there was some Photoshop IRB information found,
         if ( $joined_IRB != "" )
         {
-                // Found a Photoshop Image Resource Block
-                $pos = 0;
-
-                // Cycle through the IRB and extract its records - Records are started with 8BIM, so cycle until no more instances of 8BIM can be found
-                while ( ( $pos < strlen( $joined_IRB) ) && ( ($pos = strpos( $joined_IRB, "8BIM", $pos) ) !== FALSE ) )
-                {
-                        // Skip the position over the 8BIM characters
-                        $pos += 4;
-
-                        // Next two characters are the record ID - denoting what type of record it is.
-                        $ID = ord( $joined_IRB{ $pos } ) * 256 + ord( $joined_IRB{ $pos +1 } );
-
-                        // Skip the positionover the two record ID characters
-                        $pos += 2;
-
-                        // Next comes a Record Name - usually not used, but it should be a null terminated string, padded with 0x00 to be an even length
-                        $namestartpos = $pos;
-
-                        // Change: Fixed processing of embedded resource names, as of revision 1.10
-
-                        // NOTE: Photoshop does not process resource names according to the standard :
-                        // "Adobe Photoshop 6.0 File Formats Specification, Version 6.0, Release 2, November 2000"
-                        //
-                        // The resource name is actually formatted as follows:
-                        // One byte name length, followed by the null terminated ascii name string.
-                        // The field is then padded with a Null character if required, to ensure that the
-                        // total length of the name length and name is even.
-
-                        // Name - process it
-                        // Get the length
-                        $namelen = ord ( $joined_IRB{ $namestartpos } );
-
-                        // Total length of name and length info must be even, hence name length must be odd
-                        // Check if the name length is even,
-                        if ( $namelen % 2 == 0 )
-                        {
-                                // add one to length to make it odd
-                                $namelen ++;
-                        }
-                        // Extract the name
-                        $resembeddedname = trim( substr ( $joined_IRB, $namestartpos+1,  $namelen) );
-                        $pos += $namelen + 1;
-
-
-                        // Next is a four byte size field indicating the size in bytes of the record's data  - MSB first
-                        $datasize =     ord( $joined_IRB{ $pos } ) * 16777216 + ord( $joined_IRB{ $pos + 1 } ) * 65536 +
-                                        ord( $joined_IRB{ $pos + 2 } ) * 256 + ord( $joined_IRB{ $pos + 3 } );
-                        $pos += 4;
-
-                        // The record is stored padded with 0x00 characters to make the size even, so we need to calculate the stored size
-                        $storedsize =  $datasize + ($datasize % 2);
-
-                        $resdata = substr ( $joined_IRB, $pos, $datasize );
-
-                        // Get the description for this resource
-                        // Check if this is a Path information Resource, since they have a range of ID's
-                        if ( ( $ID >= 0x07D0 ) && ( $ID <= 0x0BB6 ) )
-                        {
-                                $ResDesc = "ID Info : Path Information (saved paths).";
-                        }
-                        else
-                        {
-                                if ( array_key_exists( $ID, $GLOBALS[ "Photoshop_ID_Descriptions" ] ) )
-                                {
-                                        $ResDesc = $GLOBALS[ "Photoshop_ID_Descriptions" ][ $ID ];
-                                }
-                                else
-                                {
-                                        $ResDesc = "";
-                                }
-                        }
-
-                        // Get the Name of the Resource
-                        if ( array_key_exists( $ID, $GLOBALS[ "Photoshop_ID_Names" ] ) )
-                        {
-                                $ResName = $GLOBALS['Photoshop_ID_Names'][ $ID ];
-                        }
-                        else
-                        {
-                                $ResName = "";
-                        }
-
-
-                        // Store the Resource in the array to be returned
-
-                        $IRBdata[] = array(     "ResID" => $ID,
-                                                "ResName" => $ResName,
-                                                "ResDesc" => $ResDesc,
-                                                "ResEmbeddedName" => $resembeddedname,
-                                                "ResData" => $resdata );
-
-                        // Jump over the data to the next record
-                        $pos += $storedsize;
-                }
-
-                return $IRBdata;
+                // Found a Photoshop Image Resource Block - extract it.
+                // Change: Moved code into unpack_Photoshop_IRB_Data to allow TIFF reading as of 1.11
+                return unpack_Photoshop_IRB_Data( $joined_IRB );
 
         }
         else
@@ -219,6 +137,10 @@ function get_Photoshop_IRB( $jpeg_header_data )
 /******************************************************************************
 * End of Function:     get_Photoshop_IRB
 ******************************************************************************/
+
+
+
+
 
 
 
@@ -249,9 +171,6 @@ function get_Photoshop_IRB( $jpeg_header_data )
 
 function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
 {
-        // Photoshop Image Resource blocks can span several JPEG APP13 segments, so we need to join them up if there are more than one
-        $joined_IRB = "";
-
         // Delete all existing Photoshop IRB blocks - the new one will replace them
 
         //Cycle through the header segments
@@ -272,63 +191,10 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
 
         // Now we have deleted the pre-existing blocks
 
-        $packed_IRB_data = "";
 
-        // Cycle through each resource in the new IRB,
-        foreach ($new_IRB_data as $resource)
-        {
-
-                // Change: Fix to avoid creating blank resources, as of revision 1.10
-
-                // Check if there is actually any data for this resource
-                if( strlen( $resource['ResData'] ) == 0 )
-                {
-                        // No data for resource - skip it
-                        continue;
-                }
-
-                // Append the 8BIM tag, and resource ID to the packed output data
-                $packed_IRB_data .= pack("a4n", "8BIM", $resource['ResID'] );
-
-
-                // Change: Fixed processing of embedded resource names, as of revision 1.10
-
-                // NOTE: Photoshop does not process resource names according to the standard :
-                // "Adobe Photoshop 6.0 File Formats Specification, Version 6.0, Release 2, November 2000"
-                //
-                // The resource name is actually formatted as follows:
-                // One byte name length, followed by the null terminated ascii name string.
-                // The field is then padded with a Null character if required, to ensure that the
-                // total length of the name length and name is even.
-
-                // Append Name Size
-                $packed_IRB_data .= pack( "c", strlen(trim($resource['ResEmbeddedName'])));
-
-                // Append the Resource Name to the packed output data
-                $packed_IRB_data .= trim($resource['ResEmbeddedName']);
-
-                // If the resource name is even length, then with the addition of
-                // the size it becomes odd and needs to be padded to an even number
-                if ( strlen( trim($resource['ResEmbeddedName']) ) % 2 == 0 )
-                {
-                        // then it needs to be evened up by appending another null
-                        $packed_IRB_data .= "\x00";
-                }
-
-                // Append the resource data size to the packed output data
-                $packed_IRB_data .= pack("N", strlen( $resource['ResData'] ) );
-
-                // Append the resource data to the packed output data
-                $packed_IRB_data .= $resource['ResData'];
-
-                // If the resource data is odd length,
-                if ( strlen( $resource['ResData'] ) % 2 == 1 )
-                {
-                        // then it needs to be evened up by appending another null
-                        $packed_IRB_data .= "\x00";
-                }
-        }
-
+        // Retrieve the Packed Photoshop IRB Data
+        // Change: Moved code into pack_Photoshop_IRB_Data to allow TIFF writing as of 1.11
+        $packed_IRB_data = pack_Photoshop_IRB_Data( $new_IRB_data );
 
         // Change : This section changed to fix incorrect positioning of IRB segment, as of revision 1.10
         //          when there are no APP segments present
@@ -371,6 +237,11 @@ function put_Photoshop_IRB( $jpeg_header_data, $new_IRB_data )
 /******************************************************************************
 * End of Function:     put_Photoshop_IRB
 ******************************************************************************/
+
+
+
+
+
 
 
 
@@ -421,7 +292,6 @@ function get_Photoshop_IPTC( $Photoshop_IRB_data )
         }
 
 }
-
 /******************************************************************************
 * End of Function:     get_Photoshop_IPTC
 ******************************************************************************/
@@ -554,8 +424,16 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                         }
                         else
                         {
-                                // Unknown Resource - Make appropriate name
-                                $Resource_Name = "Unknown Resource (". $IRB_Resource['ResID'] .")";
+                                // Change: Added check for $GLOBALS['HIDE_UNKNOWN_TAGS'] to allow hiding of unknown resources as of 1.11
+                                if ( $GLOBALS['HIDE_UNKNOWN_TAGS'] == TRUE )
+                                {
+                                        continue;
+                                }
+                                else
+                                {
+                                        // Unknown Resource - Make appropriate name
+                                        $Resource_Name = "Unknown Resource (". $IRB_Resource['ResID'] .")";
+                                }
                         }
 
                         // Add HTML for the resource as appropriate
@@ -833,7 +711,16 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
                                         $output_str .= "Compressed Size = " . $thumb_data['CompressedSize'] . " bytes\n";
                                         $output_str .= "Bits per Pixel = " . $thumb_data['BitsPixel'] . " bits\n";
                                         $output_str .= "Number of planes = " . $thumb_data['Planes'] . " bytes\n";
-                                        $output_str .= "Thumbnail Data:</pre><a class=\"Photoshop_Thumbnail_Link\" href=\"get_ps_thumb.php?filename=$filename\"><img class=\"Photoshop_Thumbnail_Link\" src=\"get_ps_thumb.php?filename=$filename\"></a>\n";
+
+                                        // Change: as of version 1.11 - Changed to make thumbnail link portable across directories
+                                        // Build the path of the thumbnail script and its filename parameter to put in a url
+                                        $link_str = get_relative_path( dirname(__FILE__) . "/get_ps_thumb.php" , getcwd ( ) );
+                                        $link_str .= "?filename=";
+                                        $link_str .= get_relative_path( $filename, dirname(__FILE__) );
+
+                                        // Add thumbnail link to html
+                                        $output_str .= "Thumbnail Data:</pre><a class=\"Photoshop_Thumbnail_Link\" href=\"$link_str\"><img class=\"Photoshop_Thumbnail_Link\" src=\"$link_str\"></a>\n";
+
                                         $output_str .=  "</td></tr>\n";
                                         break;
 
@@ -1081,6 +968,223 @@ function Interpret_IRB_to_HTML( $IRB_array, $filename )
 *         INTERNAL FUNCTIONS
 *
 ******************************************************************************/
+
+
+
+
+
+
+
+/******************************************************************************
+*
+* Function:     unpack_Photoshop_IRB_Data
+*
+* Description:  Extracts Photoshop Information Resource Block (IRB) information
+*               from a binary string containing the IRB, as read from a file
+*
+* Parameters:   IRB_Data - The binary string containing the IRB
+*
+* Returns:      IRBdata - The array of Photoshop IRB records
+*
+******************************************************************************/
+
+function unpack_Photoshop_IRB_Data( $IRB_Data )
+{
+        $pos = 0;
+
+        // Cycle through the IRB and extract its records - Records are started with 8BIM, so cycle until no more instances of 8BIM can be found
+        while ( ( $pos < strlen( $IRB_Data ) ) && ( ($pos = strpos( $IRB_Data, "8BIM", $pos) ) !== FALSE ) )
+        {
+                // Skip the position over the 8BIM characters
+                $pos += 4;
+
+                // Next two characters are the record ID - denoting what type of record it is.
+                $ID = ord( $IRB_Data{ $pos } ) * 256 + ord( $IRB_Data{ $pos +1 } );
+
+                // Skip the positionover the two record ID characters
+                $pos += 2;
+
+                // Next comes a Record Name - usually not used, but it should be a null terminated string, padded with 0x00 to be an even length
+                $namestartpos = $pos;
+
+                // Change: Fixed processing of embedded resource names, as of revision 1.10
+
+                // NOTE: Photoshop does not process resource names according to the standard :
+                // "Adobe Photoshop 6.0 File Formats Specification, Version 6.0, Release 2, November 2000"
+                //
+                // The resource name is actually formatted as follows:
+                // One byte name length, followed by the null terminated ascii name string.
+                // The field is then padded with a Null character if required, to ensure that the
+                // total length of the name length and name is even.
+
+                // Name - process it
+                // Get the length
+                $namelen = ord ( $IRB_Data{ $namestartpos } );
+
+                // Total length of name and length info must be even, hence name length must be odd
+                // Check if the name length is even,
+                if ( $namelen % 2 == 0 )
+                {
+                        // add one to length to make it odd
+                        $namelen ++;
+                }
+                // Extract the name
+                $resembeddedname = trim( substr ( $IRB_Data, $namestartpos+1,  $namelen) );
+                $pos += $namelen + 1;
+
+
+                // Next is a four byte size field indicating the size in bytes of the record's data  - MSB first
+                $datasize =     ord( $IRB_Data{ $pos } ) * 16777216 + ord( $IRB_Data{ $pos + 1 } ) * 65536 +
+                                ord( $IRB_Data{ $pos + 2 } ) * 256 + ord( $IRB_Data{ $pos + 3 } );
+                $pos += 4;
+
+                // The record is stored padded with 0x00 characters to make the size even, so we need to calculate the stored size
+                $storedsize =  $datasize + ($datasize % 2);
+
+                $resdata = substr ( $IRB_Data, $pos, $datasize );
+
+                // Get the description for this resource
+                // Check if this is a Path information Resource, since they have a range of ID's
+                if ( ( $ID >= 0x07D0 ) && ( $ID <= 0x0BB6 ) )
+                {
+                        $ResDesc = "ID Info : Path Information (saved paths).";
+                }
+                else
+                {
+                        if ( array_key_exists( $ID, $GLOBALS[ "Photoshop_ID_Descriptions" ] ) )
+                        {
+                                $ResDesc = $GLOBALS[ "Photoshop_ID_Descriptions" ][ $ID ];
+                        }
+                        else
+                        {
+                                $ResDesc = "";
+                        }
+                }
+
+                // Get the Name of the Resource
+                if ( array_key_exists( $ID, $GLOBALS[ "Photoshop_ID_Names" ] ) )
+                {
+                        $ResName = $GLOBALS['Photoshop_ID_Names'][ $ID ];
+                }
+                else
+                {
+                        $ResName = "";
+                }
+
+
+                // Store the Resource in the array to be returned
+
+                $IRB_Array[] = array(     "ResID" => $ID,
+                                        "ResName" => $ResName,
+                                        "ResDesc" => $ResDesc,
+                                        "ResEmbeddedName" => $resembeddedname,
+                                        "ResData" => $resdata );
+
+                // Jump over the data to the next record
+                $pos += $storedsize;
+        }
+
+        // Return the array created
+        return $IRB_Array;
+}
+
+/******************************************************************************
+* End of Function:     unpack_Photoshop_IRB_Data
+******************************************************************************/
+
+
+
+
+
+
+
+
+
+
+
+/******************************************************************************
+*
+* Function:     pack_Photoshop_IRB_Data
+*
+* Description:  Packs a Photoshop Information Resource Block (IRB) array into it's
+*               binary form, which can be written to a file
+*
+* Parameters:   IRB_data - an Photoshop IRB array to be converted. Should be in
+*                          the same format as received from get_Photoshop_IRB
+*
+* Returns:      packed_IRB_data - the binary string of packed IRB data
+*
+******************************************************************************/
+
+function pack_Photoshop_IRB_Data( $IRB_data )
+{
+        $packed_IRB_data = "";
+
+        // Cycle through each resource in the IRB,
+        foreach ($IRB_data as $resource)
+        {
+
+                // Change: Fix to avoid creating blank resources, as of revision 1.10
+
+                // Check if there is actually any data for this resource
+                if( strlen( $resource['ResData'] ) == 0 )
+                {
+                        // No data for resource - skip it
+                        continue;
+                }
+
+                // Append the 8BIM tag, and resource ID to the packed output data
+                $packed_IRB_data .= pack("a4n", "8BIM", $resource['ResID'] );
+
+
+                // Change: Fixed processing of embedded resource names, as of revision 1.10
+
+                // NOTE: Photoshop does not process resource names according to the standard :
+                // "Adobe Photoshop 6.0 File Formats Specification, Version 6.0, Release 2, November 2000"
+                //
+                // The resource name is actually formatted as follows:
+                // One byte name length, followed by the null terminated ascii name string.
+                // The field is then padded with a Null character if required, to ensure that the
+                // total length of the name length and name is even.
+
+                // Append Name Size
+                $packed_IRB_data .= pack( "c", strlen(trim($resource['ResEmbeddedName'])));
+
+                // Append the Resource Name to the packed output data
+                $packed_IRB_data .= trim($resource['ResEmbeddedName']);
+
+                // If the resource name is even length, then with the addition of
+                // the size it becomes odd and needs to be padded to an even number
+                if ( strlen( trim($resource['ResEmbeddedName']) ) % 2 == 0 )
+                {
+                        // then it needs to be evened up by appending another null
+                        $packed_IRB_data .= "\x00";
+                }
+
+                // Append the resource data size to the packed output data
+                $packed_IRB_data .= pack("N", strlen( $resource['ResData'] ) );
+
+                // Append the resource data to the packed output data
+                $packed_IRB_data .= $resource['ResData'];
+
+                // If the resource data is odd length,
+                if ( strlen( $resource['ResData'] ) % 2 == 1 )
+                {
+                        // then it needs to be evened up by appending another null
+                        $packed_IRB_data .= "\x00";
+                }
+        }
+
+        // Return the packed data string
+        return $packed_IRB_data;
+}
+
+/******************************************************************************
+* End of Function:     pack_Photoshop_IRB_Data
+******************************************************************************/
+
+
+
 
 
 

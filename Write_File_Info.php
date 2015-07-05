@@ -16,7 +16,11 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.10
+* Revision:     1.11
+*
+* Changes:      1.10 -> 1.11 : Changed displayed toolkit version numbers to reference Toolkit_Version.php
+*                              Changed error reporting to no errors
+*                              Removed limitation on file being in current directory
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -47,7 +51,6 @@
 ***************************************************************************-->
 
 
-
         <head>
                 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
                 <STYLE TYPE="text/css" MEDIA="screen, print, projection">
@@ -67,13 +70,16 @@
         </head>
 
         <body>
-                <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>
+                <?php include 'Toolkit_Version.php'; ?>
+                <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>                   <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
                 <br>
                 <br>
 
                 <?php
                         // Turn off Error Reporting
-                        error_reporting ( E_ALL );
+                        error_reporting ( 0 );          // Change: changed to no reporting -  as of version 1.11
+
+                        include 'Toolkit_Version.php';  // Change: added as of version 1.11
 
                         // Include the required files for reading and writing Photoshop File Info
                         include 'JPEG.php';
@@ -109,8 +115,7 @@
                                 echo "Incorrect File Type - JPEG Only\n";
                                 exit( );
                         }
-                        $filename = $path_parts["basename"];
-
+                        // Change: removed limitation on file being in current directory - as of version 1.11
 
                         // Retrieve the header information
                         $jpeg_header_data = get_jpeg_header_data( $filename );
@@ -181,7 +186,7 @@
                 <br>
 
 
-                <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>
+                <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>  <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
 
                 <br>
                 <br>

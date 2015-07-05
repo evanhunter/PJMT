@@ -32,7 +32,10 @@
 *
 * Project:      JPEG Metadata
 *
-* Revision:     1.00
+* Revision:     1.11
+*
+* Changes:      1.00 -> 1.11 : changed get_Casio_Makernote_Html to allow thumbnail links to work when
+*                              toolkit is portable across directories
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -49,7 +52,7 @@ $GLOBALS['Makernote_Function_Array']['Read_Makernote_Tag'][] = "get_Casio_Makern
 $GLOBALS['Makernote_Function_Array']['get_Makernote_Text_Value'][] = "get_Casio_Text_Value";
 $GLOBALS['Makernote_Function_Array']['Interpret_Makernote_to_HTML'][] = "get_Casio_Makernote_Html";
 
-
+include_once dirname(__FILE__) .'/../pjmt_utils.php';          // Change: as of version 1.11 - added to allow directory portability
 
 
 /******************************************************************************
@@ -88,8 +91,8 @@ function get_Casio_Makernote( $Makernote_Tag, $EXIF_Array, $filehnd, $Make_Field
         {
                 return FALSE;
         }
-        
-        
+
+
         if ( substr( $Makernote_Tag['Data'],0 , 6 ) == "QVC\x00\x00\x00" )
         {
 
@@ -183,10 +186,10 @@ function get_Casio_Text_Value( $Exif_Tag, $Tag_Definitions_Name )
                 // Tag does NOT use Casio Tag definitions
                 return FALSE;
         }
-        
+
         // Shouldn't get here
         return FALSE;
-        
+
 }
 
 /******************************************************************************
@@ -232,7 +235,14 @@ function get_Casio_Makernote_Html( $Makernote_tag, $filename )
         if ( ( array_key_exists( 4, $Makernote_tag['Decoded Data'][0] ) ) &&
              ( $Makernote_tag['Makernote Tags'] == "Casio Type 2" ) )
         {
-                $Makernote_tag['Decoded Data'][0][4]['Text Value'] = "<a class=\"EXIF_Casio_Thumb_Link\" href=\"get_casio_thumb.php?filename=$filename\"><img class=\"EXIF_Casio_Thumb\" src=\"get_casio_thumb.php?filename=$filename\"></a>";
+                // Change: as of version 1.11 - Changed to make thumbnail link portable across directories
+                // Build the path of the thumbnail script and its filename parameter to put in a url
+                $link_str = get_relative_path( dirname(__FILE__) . "/get_casio_thumb.php" , getcwd ( ) );
+                $link_str .= "?filename=";
+                $link_str .= get_relative_path( $filename, dirname(__FILE__) );
+
+                // Add thumbnail link to html
+                $Makernote_tag['Decoded Data'][0][4]['Text Value'] = "<a class=\"EXIF_Casio_Thumb_Link\" href=\"$link_str\"><img class=\"EXIF_Casio_Thumb\" src=\"$link_str\"></a></td></tr>\n";
                 $Makernote_tag['Decoded Data'][0][4]['Type'] = "String";
         }
 
@@ -241,7 +251,14 @@ function get_Casio_Makernote_Html( $Makernote_tag, $filename )
         if ( ( array_key_exists( 8192, $Makernote_tag['Decoded Data'][0] ) ) &&
              ( $Makernote_tag['Makernote Tags'] == "Casio Type 2" ) )
         {
-                $Makernote_tag['Decoded Data'][0][8192]['Text Value'] = "<a class=\"EXIF_Casio_Thumb_Link\" href=\"get_casio_thumb.php?filename=$filename\"><img class=\"EXIF_Casio_Thumb\" src=\"get_casio_thumb.php?filename=$filename\"></a>";
+                // Change: as of version 1.11 - Changed to make thumbnail link portable across directories
+                // Build the path of the thumbnail script and its filename parameter to put in a url
+                $link_str = get_relative_path( dirname(__FILE__) . "/.." . "/get_casio_thumb.php" , getcwd ( ) );
+                $link_str .= "?filename=";
+                $link_str .= get_relative_path( $filename, dirname(__FILE__) . "/.." );
+
+                // Add thumbnail link to html
+                $Makernote_tag['Decoded Data'][0][8192]['Text Value'] = "<a class=\"EXIF_Casio_Thumb_Link\" href=\"$link_str\"><img class=\"EXIF_Casio_Thumb\" src=\"$link_str\"></a></td></tr>\n";
                 $Makernote_tag['Decoded Data'][0][8192]['Type'] = "String";
         }
 

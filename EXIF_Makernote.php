@@ -14,7 +14,10 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.00
+* Revision:     1.11
+*
+* Changes:      1.00 -> 1.11 : changed makernotes directory definition to allow
+*                              the toolkit to be portable across directories
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -66,7 +69,7 @@ include_once 'EXIF.php';
 
 // Set the Makernotes Directory
 
-$dir = "Makernotes/";
+$dir = dirname(__FILE__) . "/Makernotes/";      // Change: as of version 1.11 - to allow directory portability
 
 // Open the directory
 $dir_hnd = @opendir ( $dir );
@@ -80,7 +83,7 @@ while ( ( $file = readdir( $dir_hnd ) ) !== false )
         {
                 // Item is a file, break it into it's parts
                 $path_parts = pathinfo( $dir . $file );
-                
+
                 // Check if the extension is php
                 if ( $path_parts["extension"] == "php" )
                 {
@@ -139,7 +142,7 @@ function Read_Makernote_Tag( $Makernote_Tag, $EXIF_Array, $filehnd )
                 // Return the new makernote
                 return $Makernote_Tag;
         }
-        
+
         // Check if the Make Field exists in the TIFF IFD
         if ( array_key_exists ( 271, $EXIF_Array[0] ) )
         {
@@ -153,7 +156,7 @@ function Read_Makernote_Tag( $Makernote_Tag, $EXIF_Array, $filehnd )
         }
 
         // Cycle through each of the "Read_Makernote_Tag" functions
-        
+
         foreach( $GLOBALS['Makernote_Function_Array']['Read_Makernote_Tag'] as $func )
         {
                 // Run the current function, and save the result
@@ -230,7 +233,7 @@ function get_Makernote_Text_Value( $Tag, $Tag_Definitions_Name )
                         return $Text_Val;
                 }
         }
-        
+
         // No Special tag handler found for this tag - return false
         return FALSE;
 
@@ -299,7 +302,7 @@ function Interpret_Makernote_to_HTML( $Makernote_tag, $filename )
         }
 
         // Cycle through each of the "Interpret_Makernote_to_HTML" functions
-        
+
         foreach( $GLOBALS['Makernote_Function_Array']['Interpret_Makernote_to_HTML'] as $func )
         {
                 // Run the current function, and save the result
@@ -314,7 +317,7 @@ function Interpret_Makernote_to_HTML( $Makernote_tag, $filename )
         }
 
         // No Interpreter function handled the makernote - return a message
-        
+
         $output_str .= "<h4 class=\"EXIF_Makernote_Small_Heading\">Could not Decode Makernote, it may be corrupted or empty</h4>\n";
 
         return $output_str;

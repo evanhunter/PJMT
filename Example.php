@@ -13,12 +13,14 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.10
+* Revision:     1.11
 *
 * Changes:      1.00 -> 1.10 : Changed name of GET parameter from 'filename' to 'jpeg_fname'
 *                              to stop script-kiddies using the google command 'allinurl:*.php?filename=*'
 *                              to find servers to attack
 *                              Changed behavior when no filename is given, to be cleaner
+*               1.10 -> 1.11 : Changed displayed toolkit version numbers to reference Toolkit_Version.php
+*                              Changed this example file to be easily relocatable
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -69,16 +71,19 @@
                         // Turn off Error Reporting
                         error_reporting ( 0 );
 
+                        // Change: Allow this example file to be easily relocatable - as of version 1.11
+                        $Toolkit_Dir = "./";     // Ensure dir name includes trailing slash
+
                         // Hide any unknown EXIF tags
                         $GLOBALS['HIDE_UNKNOWN_TAGS'] = TRUE;
 
-
-                        include 'JPEG.php';
-                        include 'JFIF.php';
-                        include 'PictureInfo.php';
-                        include 'XMP.php';
-                        include 'Photoshop_IRB.php';
-                        include 'EXIF.php';
+                        include $Toolkit_Dir . 'Toolkit_Version.php';          // Change: added as of version 1.11
+                        include $Toolkit_Dir . 'JPEG.php';                     // Change: Allow this example file to be easily relocatable - as of version 1.11
+                        include $Toolkit_Dir . 'JFIF.php';
+                        include $Toolkit_Dir . 'PictureInfo.php';
+                        include $Toolkit_Dir . 'XMP.php';
+                        include $Toolkit_Dir . 'Photoshop_IRB.php';
+                        include $Toolkit_Dir . 'EXIF.php';
 
                         // Retrieve the JPEG image filename from the http url request
                         if ( ( !array_key_exists( 'jpeg_fname', $GLOBALS['HTTP_GET_VARS'] ) ) ||
@@ -88,7 +93,7 @@
                                 echo "</head>\n";
                                 echo "<body>\n";
                                 echo "<p>No image filename defined - use GET method with field: jpeg_fname</p>\n";
-                                echo "<p><a href=\"http://www.ozhiker.com/electronics/pjmt/\" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>\n";
+                                echo "<p><a href=\"http://www.ozhiker.com/electronics/pjmt/\" >PHP JPEG Metadata Toolkit version " . $GLOBALS['Toolkit_Version'] . ", Copyright (C) 2004 Evan Hunter</a></p>\n";         // Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11
                                 echo "</body>\n";
                                 exit( );
                         }
@@ -110,15 +115,18 @@
 
         <body>
 
-                <p>Interpreted using: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>
+                <p>Interpreted using: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>    <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
                 <br>
                 <br>
 
                 <h1><B><U>Metadata for &quot;<?php echo $filename; ?>&quot;</U></B></h1>
                 <br>
 
-                <!-- Output a link allowing user to edit the Photoshop File Info -->
-                <h4><a href="Edit_File_Info_Example.php?jpeg_fname=<?php echo $filename; ?>" >Click here to edit the Photoshop File Info for this file</a></h4>
+                <!-- Output a link allowing user to edit the Photoshop File Info
+                     Change: Allow this example file to be easily relocatable - as of version 1.11
+                -->
+                <?php  $relative_filename = get_relative_path( $filename, $Toolkit_Dir );  ?>
+                <h4><a href="<?php echo $Toolkit_Dir."Edit_File_Info_Example.php?jpeg_fname=$relative_filename"; ?>" >Click here to edit the Photoshop File Info for this file</a></h4>
                 <br>
 
 
@@ -203,7 +211,7 @@
                 <BR>
                 <BR>
                 <p>Interpreted using:</p>
-                <p><a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>
+                <p><a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>     <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
 
         </body>
 

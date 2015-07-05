@@ -31,7 +31,9 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.10
+* Revision:     1.11
+*
+* Changes:      1.10 -> 1.11 : Changed displayed toolkit version numbers to reference Toolkit_Version.php
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -63,8 +65,7 @@
 
 
 
-        // Turn off Error Reporting
-        error_reporting ( E_ALL );
+        include 'Toolkit_Version.php';          // Change: added as of version 1.11
 
         // Check for operation modes 2 or 3
         // i.e. $filename is defined, and $new_ps_file_info_array is not
@@ -220,7 +221,7 @@
 * Now output the actual HTML form
 *
 ***************************************************************************/
-       
+
 ?>
 
 
@@ -569,6 +570,6 @@
 
         <br>
         <br>
-        <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>
+        <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>     <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
         <br>
         <br>

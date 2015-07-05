@@ -14,7 +14,9 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.10
+* Revision:     1.11
+*
+* Changes:      1.10 -> 1.11 : Changed displayed toolkit version numbers to reference Toolkit_Version.php
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -65,6 +67,8 @@
                         // Turn off Error Reporting
                         error_reporting ( 0 );
 
+                        include 'Toolkit_Version.php';          // Change: added as of version 1.11
+
                         // Retrieve the JPEG image filename from the http url request
                         if ( ( !array_key_exists( 'jpeg_fname', $GLOBALS['HTTP_GET_VARS'] ) ) ||
                              ( $GLOBALS['HTTP_GET_VARS']['jpeg_fname'] == "" ) )
@@ -73,7 +77,7 @@
                                 echo "</head>\n";
                                 echo "<body>\n";
                                 echo "<p>No image filename defined - use GET method with field: jpeg_fname</p>\n";
-                                echo "<p><a href=\"http://www.ozhiker.com/electronics/pjmt/\" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>\n";
+                                echo "<p><a href=\"http://www.ozhiker.com/electronics/pjmt/\" >PHP JPEG Metadata Toolkit version " . $GLOBALS['Toolkit_Version'] . ", Copyright (C) 2004 Evan Hunter</a></p>\n";         // Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11
                                 echo "</body>\n";
                                 exit( );
 
@@ -89,7 +93,7 @@
         </head>
 
         <body >
-                <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version 1.0, Copyright (C) 2004 Evan Hunter</a></p>
+                <p>Powered by: <a href="http://www.ozhiker.com/electronics/pjmt/" >PHP JPEG Metadata Toolkit version <?php echo $GLOBALS['Toolkit_Version'] ?>, Copyright (C) 2004 Evan Hunter</a></p>    <!-- Change: displayed toolkit version numbers to reference Toolkit_Version.php - as of version 1.11 -->
                 <br>
                 <br>
 

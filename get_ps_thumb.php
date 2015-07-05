@@ -15,7 +15,10 @@
 *
 * Project:      PHP JPEG Metadata Toolkit
 *
-* Revision:     1.00
+* Revision:     1.11
+*
+*               1.00 -> 1.11 : Added support for Photoshop IRB thumbnails which are
+*                              embedded within EXIF information (used in TIFF files)
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -49,50 +52,124 @@
         ob_start( );
 
 
-        include 'JPEG.php';
-        include 'Photoshop_IRB.php';
-
         // retrieve the filename from the URL parameters
 
         $filename = $GLOBALS['HTTP_GET_VARS']['filename'];
-        
-        // Retrieve the JPEG header Data
 
-        $jpeg_header_data = get_jpeg_header_data( $filename );
+        // Change: Check for file extension rather than assuming JPEG as of 1.11
+        // Retrieve the Filename Extension
+        $path_parts = pathinfo( $filename );
 
-        // Retrieve any Photoshop IRB data in the file
-
-        $IRB_array = get_Photoshop_IRB( $jpeg_header_data );
-
-        // Check if Photoshop IRB data was retrieved
-
-        if ( $IRB_array === FALSE )
+        // Check if the Extension is JPEG
+        if ( ( strcasecmp( $path_parts["extension"], "jpg" ) == 0 ) ||
+             ( strcasecmp( $path_parts["extension"], "jpeg" ) == 0 ) )
         {
-                // No Photoshop IRB data could be retrieved - abort
-                ob_end_clean ( );
-                echo "<p>Photoshop IRB could not be retrieved</p>\n";
-                return;
+                // JPEG Extension
+
+                include 'JPEG.php';
+                include 'Photoshop_IRB.php';
+
+                // Retrieve the JPEG header Data
+
+                $jpeg_header_data = get_jpeg_header_data( $filename );
+
+                // Retrieve any Photoshop IRB data in the file
+
+                $IRB_array = get_Photoshop_IRB( $jpeg_header_data );
+
+                // Check if Photoshop IRB data was retrieved
+
+                if ( $IRB_array === FALSE )
+                {
+                        // No Photoshop IRB data could be retrieved - abort
+                        ob_end_clean ( );
+                        echo "<p>Photoshop IRB could not be retrieved from the JPEG file</p>\n";
+                        return;
+                }
+
+                // Cycle through the resources in the Photoshop IRB
+                // Until either a thumbnail resource is found or
+                // there are no more resources
+                $i = 0;
+                while ( ( $i < count( $IRB_array ) ) &&
+                        ( $IRB_array[$i]['ResID'] != 0x0409 ) &&
+                        ( $IRB_array[$i]['ResID'] != 0x040C ) )
+                {
+                        $i++;
+                }
+
+
+                // Check if a thumbnail was found
+                if ( $i < count( $IRB_array ) )
+                {
+                        // A thumbnail was found, Display it
+                        ob_end_clean ( );
+                        header("Content-type: image/jpeg");
+                        print substr( $IRB_array[$i]['ResData'] , 28 );
+                }
         }
-
-        // Cycle through the resources in the Photoshop IRB
-        // Until either a thumbnail resource is found or
-        // there are no more resources
-        $i = 0;
-        while ( ( $i < count( $IRB_array ) ) &&
-                ( $IRB_array[$i]['ResID'] != 0x0409 ) &&
-                ( $IRB_array[$i]['ResID'] != 0x040C ) )
+        // Change: Add support for TIFF Photoshop IRB thumbnails as of 1.11
+        // Check if file has TIFF extension
+        else if ( ( strcasecmp( $path_parts["extension"], "tif" ) == 0 ) ||
+                  ( strcasecmp( $path_parts["extension"], "tiff" ) == 0 ) )
         {
-                $i++;
+                // TIFF Extension
+
+                include 'EXIF.php';
+
+                // Retrieve the EXIF info
+                $exif_array = get_EXIF_TIFF( $filename );
+
+                // Retrieve any Photoshop IRB data in the EXIF
+                if ( ( array_key_exists( 0, $exif_array ) ) &&
+                     ( array_key_exists( 34377, $exif_array[0] ) ) &&
+                     ( array_key_exists( 'Data', $exif_array[0][34377] ) ) )
+                {
+                        $IRB_array = $exif_array[0][34377]['Data'];
+
+                        // Check if Photoshop IRB data was retrieved
+
+                        if ( $IRB_array === FALSE )
+                        {
+                                // No Photoshop IRB data could be retrieved - abort
+                                ob_end_clean ( );
+                                echo "<p>Photoshop IRB could not be retrieved from the TIFF file</p>\n";
+                                return;
+                        }
+
+                        // Cycle through the resources in the Photoshop IRB
+                        // Until either a thumbnail resource is found or
+                        // there are no more resources
+                        $i = 0;
+                        while ( ( $i < count( $IRB_array ) ) &&
+                                ( $IRB_array[$i]['ResID'] != 0x0409 ) &&
+                                ( $IRB_array[$i]['ResID'] != 0x040C ) )
+                        {
+                                $i++;
+                        }
+
+
+                        // Check if a thumbnail was found
+                        if ( $i < count( $IRB_array ) )
+                        {
+                                // A thumbnail was found, Display it
+                                ob_end_clean ( );
+                                header("Content-type: image/jpeg");
+                                print substr( $IRB_array[$i]['ResData'] , 28 );
+                        }
+                }
+                else
+                {
+                        // Embedded Photoshop IRB block not found
+                        ob_end_clean ( );
+                        echo "No Photoshop IRB found within EXIF";
+                }
         }
-
-
-        // Check if a thumbnail was found
-        if ( $i < count( $IRB_array ) )
+        else
         {
-                // A thumbnail was found, Display it
+                // Unknown extension
                 ob_end_clean ( );
-                header("Content-type: image/jpeg");
-                print substr( $IRB_array[$i]['ResData'] , 28 );
+                echo "Unknown file Type";
         }
 
 

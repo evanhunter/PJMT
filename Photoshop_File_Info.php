@@ -13,7 +13,8 @@
 *
 * Project:      JPEG Metadata
 *
-* Revision:     1.10
+* Revision:     1.11
+* Changes:      1.10 -> 1.11 : Changed displayed toolkit version numbers to reference Toolkit_Version.php
 *
 * URL:          http://electronics.ozhiker.com
 *
@@ -44,6 +45,7 @@
 // TODO: XMP sections: XAPMM, TIFF, EXIF
 
 
+include 'Toolkit_Version.php';          // Change: added as of version 1.11
 
 
 /******************************************************************************
@@ -54,7 +56,7 @@
 *
 ******************************************************************************/
 
-$GLOBALS[ "Software Name" ] = "(PHP JPEG Metadata Toolkit v1.xx)";
+$GLOBALS[ "Software Name" ] = "(PHP JPEG Metadata Toolkit v" . $GLOBALS['Toolkit_Version'] . ")";          // Change:  Changed version numbers to reference Toolkit_Version.php - as of version 1.11
 
 /******************************************************************************
 * End of Global Variable:     Software Name

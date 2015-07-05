@@ -138,6 +138,113 @@
                                 </td>
                         </tr>
 
+
+                        <tr>
+                                <td rowspan=16 >1.10 -&gt; 1.11</td>
+                                <td>EXIF.php</td>
+                                <td>
+                                        Added functionality to allow decoding of XMP and Photoshop IRB information embedded within the EXIF data<br>
+                                        Added checks for http and ftp wrappers, as these are not supported<br>
+                                        Changed <i>interpret_IFD</i> to allow thumbnail links to work when toolkit is portable across directories
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>Makernotes/casio.php</td>
+                                <td>Changed <i>get_Casio_Makernote_Html</i> to allow thumbnail links to work when toolkit is portable across directories</td>
+                        </tr>
+
+                        <tr>
+                                <td>Makernotes/olympus.php</td>
+                                <td>Changed <i>get_Olympus_Makernote_Html</i> to allow thumbnail links to work when toolkit is portable across directories</td>
+                        </tr>
+
+                        <tr>
+                                <td>JFIF.php</td>
+                                <td>Changed <i>Interpret_JFXX_to_HTML</i> to allow thumbnail links to work when toolkit is portable across directories</td>
+                        </tr>
+                        <tr>
+                                <td>Photoshop_IRB.php</td>
+                                <td>
+                                        Moved code out of <i>get_Photoshop_IRB</i> into new function <i>unpack_Photoshop_IRB_Data</i> to allow reading of IRB blocks embedded within EXIF (for TIFF Files)<br>
+                                        Moved code out of <i>put_Photoshop_IRB</i> into new function <i>pack_Photoshop_IRB_Data</i> to allow writing of IRB blocks embedded within EXIF (for TIFF Files)<br>
+                                        Enabled the usage of $GLOBALS['HIDE_UNKNOWN_TAGS'] to hide unknown resources<br>
+                                        Changed <i>Interpret_IRB_to_HTML</i> to allow thumbnail links to work when toolkit is portable across directories
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>EXIF_Makernote.php</td>
+                                <td>
+                                        Changed makernotes directory definition to allow the toolkit to be portable across directories
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>EXIF_Tags.php</td>
+                                <td>
+                                        Added TIFF compression types ZIP, LZW and JPEG<br>
+                                        Added embedded XMP tag<br>
+                                        Added embedded Photoshop IRB tag<br>
+                                        Fixed GPS tags after testing
+                                </td>
+                        </tr>
+
+                        <tr>
+                                <td>Example.php</td>
+                                <td>
+                                        Changed displayed toolkit version numbers to reference Toolkit_Version.php
+                                        Changed this example file to be easily relocatable                                        
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>TIFFExample.php</td>
+                                <td>
+                                        Changed displayed toolkit version numbers to reference Toolkit_Version.php
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>Write_File_Info.php</td>
+                                <td>
+                                        Changed displayed toolkit version numbers to reference Toolkit_Version.php<br>
+                                        Changed error reporting to no errors<br>
+                                        Removed limitation on file being in current directory
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>Edit_File_Info_Example.php</td>
+                                <td>
+                                        Changed displayed toolkit version numbers to reference Toolkit_Version.php
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>Photoshop_File_Info.php</td>
+                                <td>
+                                        Changed displayed toolkit version numbers to reference Toolkit_Version.php
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>Edit_File_Info.php</td>
+                                <td>
+                                        Changed displayed toolkit version numbers to reference Toolkit_Version.php
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>get_ps_thumb.php</td>
+                                <td>
+                                        Added support for Photoshop IRB thumbnails which are embedded within EXIF information (used in TIFF files)
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>Toolkit_Version.php</td>
+                                <td>
+                                        New File - Added file to provide a single storage place for current version number
+                                </td>
+                        </tr>
+                        <tr>
+                                <td>pjmt_utils.php</td>
+                                <td>
+                                        New File - Added file to provide utility functions for the toolkit
+                                </td>
+                        </tr>
+
                 </table>
 
                 <br>
