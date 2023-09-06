@@ -32,6 +32,8 @@
 *               Header          10 Bytes         "Nikon\x00\x02\x10\x00\x00"
 *                                               or
 *                                               "Nikon\x00\x02\x00\x00\x00"
+*                                               or
+*                                               "Nikon\x00\x02\x11\x00\x00"
 *               TIFF Data       Variable        TIFF header, with associated
 *                                               Standard IFD Data using, Nikon
 *                                               Type 3 Tags. Offsets are from
@@ -131,7 +133,8 @@ function get_Nikon_Makernote( $Makernote_Tag, $EXIF_Array, $filehnd, $Make_Field
 
         }
         else if ( ( substr( $Makernote_Tag['Data'],0 , 10 ) == "Nikon\x00\x02\x10\x00\x00" ) ||
-                  ( substr( $Makernote_Tag['Data'],0 , 10 ) == "Nikon\x00\x02\x00\x00\x00" ) )
+                  ( substr( $Makernote_Tag['Data'],0 , 10 ) == "Nikon\x00\x02\x00\x00\x00" ) ||
+                  ( substr( $Makernote_Tag['Data'],0 , 10 ) == "Nikon\x00\x02\x11\x00\x00" ) )
         {
                 // Nikon Type 3 Makernote
 
